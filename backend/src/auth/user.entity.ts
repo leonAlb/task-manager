@@ -6,11 +6,11 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  firstName: string;
+  @Column({ unique: true })
+  email: string;
 
   @Column()
-  lastName: string;
+  password: string;
 
   @OneToMany(() => Task, (task) => task.user)
   tasks: Task[];
