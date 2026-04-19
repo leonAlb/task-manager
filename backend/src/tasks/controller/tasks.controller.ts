@@ -30,13 +30,15 @@ export class TasksController {
   // Get all tasks for the authenticated user
   @Get()
   async getTasks(@Req() request: Request) {
-    return await this.tasksService.getTasks(request);
+    const userId = request.user.sub;
+    return await this.tasksService.getTasks(userId);
   }
 
   // Create a new task for the authenticated user
   @Post()
-  async createTask(@Req() request: Request, @Body() body: CreateTaskDto) {
-    return await this.tasksService.createTask(request, body.title);
+  async createTask(@Req() req: Request, @Body() body: CreateTaskDto) {
+    const userId = req.user.sub;
+    return await this.tasksService.createTask(userId, body.title);
   }
 
   // Update a task by ID for the authenticated user
@@ -46,7 +48,8 @@ export class TasksController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateTaskDto,
   ) {
-    return await this.tasksService.updateTask(request, id, body);
+    const userId = request.user.sub;
+    return await this.tasksService.updateTask(userId, id, body);
   }
 
   // Delete a task by ID for the authenticated user
@@ -55,6 +58,7 @@ export class TasksController {
     @Req() request: Request,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return await this.tasksService.deleteTask(request, id);
+    const userId = request.user.sub;
+    return await this.tasksService.deleteTask(userId, id);
   }
 }

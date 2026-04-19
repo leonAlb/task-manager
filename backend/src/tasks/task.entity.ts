@@ -5,7 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { User } from '../auth/user.entity';
+import { User } from '../auth/entities/user.entity';
 
 export enum TaskStatus {
   TODO = 'todo',
@@ -28,7 +28,6 @@ export class Task {
   })
   status: TaskStatus;
 
-  // Foreign key to associate task with a user
   @Column()
   userId: number;
 

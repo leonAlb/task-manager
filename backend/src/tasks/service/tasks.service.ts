@@ -22,26 +22,26 @@ export class TasksService {
   }
 
   // Get all tasks for the authenticated user
-  async getTasks(request: { user: { sub: number } }) {
+  async getTasks(userId: number) {
     // Just search by the exposed userId! No need to find the user first.
     return this.tasksRepository.find({
-      where: { userId: request.user.sub },
+      where: { userId },
     });
   }
 
   // Create a new task for the authenticated user
-  async createTask(request: { user: { sub: number } }, title: string) {
+  async createTask(userid: number, title: string) {
     const task = this.tasksRepository.create({
       title,
       status: TaskStatus.TODO,
-      userId: request.user.sub,
+      userId: userid,
     });
     return this.tasksRepository.save(task);
   }
 
   // Update a task
   async updateTask(
-    request: { user: { sub: number } },
+    userId: number,
     taskId: number,
     updateData: { status?: TaskStatus; title?: string },
   ) {
@@ -51,7 +51,7 @@ export class TasksService {
       throw new NotFoundException('Task not found');
     }
 
-    if (task.userId !== request.user.sub) {
+    if (task.userId !== userId) {
       throw new ForbiddenException(
         'You do not have permission to update this task',
       );
@@ -63,14 +63,14 @@ export class TasksService {
   }
 
   // Delete a task
-  async deleteTask(request: { user: { sub: number } }, taskId: number) {
+  async deleteTask(userId: number, taskId: number) {
     const task = await this.tasksRepository.findOne({ where: { id: taskId } });
 
     if (!task) {
       throw new NotFoundException('Task not found');
     }
 
-    if (task.userId !== request.user.sub) {
+    if (task.userId !== userId) {
       throw new ForbiddenException(
         'You do not have permission to delete this task',
       );

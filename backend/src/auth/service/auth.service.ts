@@ -4,65 +4,49 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { User } from '../user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { User } from '../entities/user.entity';
+import { RefreshToken } from '../entities/refresh-token.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(RefreshToken)
+    private tokenRepository: Repository<RefreshToken>,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
-  async getUsers() {
-    const users = await this.usersRepository.find({ relations: ['tasks'] });
-    return users.map((user) => ({
-      id: user.id,
-      email: user.email,
-      tasks: user.tasks,
-    }));
-  }
-
   async login(email: string, password: string) {
-    // Find the user by email
     const user = await this.usersRepository.findOne({ where: { email } });
-    if (!user) {
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException('Invalid Login Credentials');
     }
-    // Compare the provided password with the stored hashed password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      throw new UnauthorizedException('Invalid Login Credentials');
-    }
-    // Generate a JWT token
+
     const payload = { sub: user.id, email: user.email };
-    return {
-      access_token: await this.jwtService.signAsync(payload),
-    };
+
+    return this.generateTokens(payload);
   }
 
   async register(
     email: string,
     password: string,
-  ): Promise<Omit<User, 'password'>> {
-    // Hash the password before saving
+  ): Promise<Omit<User, 'password' | 'refreshTokens'>> {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Check if the email is already in use
     const existingUser = await this.usersRepository.findOne({
       where: { email },
     });
 
-    // If the email is already in use, throw a conflict exception
     if (existingUser) {
       throw new ConflictException('Email already in use');
-    }
-    // If the email is not in use, create a new user
-    else {
+    } else {
       const newUser = this.usersRepository.create({
         email,
         password: hashedPassword,
@@ -75,6 +59,93 @@ export class AuthService {
         tasks: newUser.tasks,
       };
     }
+  }
+
+  async refreshToken(refreshToken: string) {
+    const secret = this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
+    let payload: { sub: number; email: string };
+
+    try {
+      payload = await this.jwtService.verifyAsync<{
+        sub: number;
+        email: string;
+      }>(refreshToken, { secret });
+    } catch {
+      throw new UnauthorizedException(
+        'Invalid or expired refresh token signature',
+      );
+    }
+
+    const storedToken = await this.tokenRepository.findOne({
+      where: { token: refreshToken },
+    });
+
+    if (!storedToken) {
+      throw new UnauthorizedException('Refresh token not found in database');
+    }
+
+    if (storedToken.isRevoked) {
+      throw new UnauthorizedException('Refresh token has been revoked');
+    }
+
+    if (storedToken.expiresAt < new Date()) {
+      throw new UnauthorizedException('Refresh token has expired');
+    }
+
+    storedToken.isRevoked = true;
+    await this.tokenRepository.save(storedToken);
+
+    return this.generateTokens({
+      sub: payload.sub,
+      email: payload.email,
+    });
+  }
+
+  async logout(refreshToken: string) {
+    const storedToken = await this.tokenRepository.findOne({
+      where: { token: refreshToken },
+    });
+
+    if (!storedToken) {
+      throw new UnauthorizedException('Refresh token not found in database');
+    }
+
+    storedToken.isRevoked = true;
+    await this.tokenRepository.save(storedToken);
+
+    return { message: 'Logged out successfully' };
+  }
+
+  private async generateTokens(payload: { sub: number; email: string }) {
+    const refreshSecret =
+      this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload),
+      this.jwtService.signAsync(payload, {
+        secret: refreshSecret,
+        expiresIn: '7d',
+      }),
+    ]);
+
+    const newRefreshToken = this.tokenRepository.create({
+      token: refreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      isRevoked: false,
+      user: { id: payload.sub } as User,
+    });
+    await this.tokenRepository.save(newRefreshToken);
+
+    return { access_token: accessToken, refresh_token: refreshToken };
+  }
+
+  async getUsers() {
+    const users = await this.usersRepository.find({ relations: ['tasks'] });
+    return users.map((user) => ({
+      id: user.id,
+      email: user.email,
+      tasks: user.tasks,
+    }));
   }
 
   async findById(id: number): Promise<User> {
