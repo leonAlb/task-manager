@@ -1,7 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Task } from '../task.entity';
+import { Task, TaskStatus } from '../task.entity';
 import { AuthService } from '../../auth/service/auth.service';
 
 @Injectable()
@@ -12,16 +16,66 @@ export class TasksService {
     private authService: AuthService,
   ) {}
 
+  // Get all users with their tasks
+  async getUsers() {
+    return await this.authService.getUsers();
+  }
+
+  // Get all tasks for the authenticated user
+  async getTasks(request: { user: { sub: number } }) {
+    // Just search by the exposed userId! No need to find the user first.
+    return this.tasksRepository.find({
+      where: { userId: request.user.sub },
+    });
+  }
+
+  // Create a new task for the authenticated user
   async createTask(request: { user: { sub: number } }, title: string) {
-    const user = await this.authService.findById(request.user.sub);
-    if (!user) {
-      throw new Error('User not found');
-    }
     const task = this.tasksRepository.create({
       title,
-      isCompleted: false,
-      user: { email: user.email },
+      status: TaskStatus.TODO,
+      userId: request.user.sub,
     });
     return this.tasksRepository.save(task);
+  }
+
+  // Update a task
+  async updateTask(
+    request: { user: { sub: number } },
+    taskId: number,
+    updateData: { status?: TaskStatus; title?: string },
+  ) {
+    const task = await this.tasksRepository.findOne({ where: { id: taskId } });
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    if (task.userId !== request.user.sub) {
+      throw new ForbiddenException(
+        'You do not have permission to update this task',
+      );
+    }
+
+    Object.assign(task, updateData);
+
+    return this.tasksRepository.save(task);
+  }
+
+  // Delete a task
+  async deleteTask(request: { user: { sub: number } }, taskId: number) {
+    const task = await this.tasksRepository.findOne({ where: { id: taskId } });
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    if (task.userId !== request.user.sub) {
+      throw new ForbiddenException(
+        'You do not have permission to delete this task',
+      );
+    }
+
+    return this.tasksRepository.remove(task);
   }
 }

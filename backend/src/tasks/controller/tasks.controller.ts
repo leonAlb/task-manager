@@ -8,10 +8,13 @@ import {
   Delete,
   Param,
   Body,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { TasksService } from '../service/tasks.service';
 import { AuthGuard } from '../../auth/guard/auth.guard';
 import type { Request } from 'express';
+import { CreateTaskDto } from '../dto/create-task.dto';
+import { UpdateTaskDto } from '../dto/update-task.dto';
 
 @Controller('tasks')
 @UseGuards(AuthGuard)
@@ -20,35 +23,38 @@ export class TasksController {
 
   // Get all users with all their tasks
   @Get('users')
-  getUsers(@Req() request: Request) {
-    return request;
+  async getUsers() {
+    return await this.tasksService.getUsers();
   }
 
   // Get all tasks for the authenticated user
   @Get()
-  getTasks(@Req() request: Request) {
-    return request;
+  async getTasks(@Req() request: Request) {
+    return await this.tasksService.getTasks(request);
   }
 
   // Create a new task for the authenticated user
   @Post()
-  createTask(@Req() request: Request, @Body() body: { title: string }) {
-    return this.tasksService.createTask(request, body.title);
+  async createTask(@Req() request: Request, @Body() body: CreateTaskDto) {
+    return await this.tasksService.createTask(request, body.title);
   }
 
   // Update a task by ID for the authenticated user
   @Patch(':id')
-  updateTask(@Req() request: Request, @Param('id') id: string) {
-    console.log('Updating task with ID:', id);
-    return request;
+  async updateTask(
+    @Req() request: Request,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateTaskDto,
+  ) {
+    return await this.tasksService.updateTask(request, id, body);
   }
 
   // Delete a task by ID for the authenticated user
   @Delete(':id')
-  deleteTask(@Req() request: Request, @Param('id') id: string) {
-    console.log('Deleting task with ID:', id);
-    return request;
-    // Compare the user ID from the JWT with the user ID associated with the task
-    // If they match, allow the operation; otherwise, throw an UnauthorizedException
+  async deleteTask(
+    @Req() request: Request,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.tasksService.deleteTask(request, id);
   }
 }

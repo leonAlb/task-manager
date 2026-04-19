@@ -19,7 +19,7 @@ import { AuthGuard } from './guard/auth.guard';
         const secret = config.get<string>('JWT_SECRET');
         return {
           secret: secret,
-          signOptions: { expiresIn: '300s' },
+          signOptions: { expiresIn: '3000s' },
         };
       },
     }),

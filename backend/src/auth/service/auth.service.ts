@@ -17,6 +17,15 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  async getUsers() {
+    const users = await this.usersRepository.find({ relations: ['tasks'] });
+    return users.map((user) => ({
+      id: user.id,
+      email: user.email,
+      tasks: user.tasks,
+    }));
+  }
+
   async login(email: string, password: string) {
     // Find the user by email
     const user = await this.usersRepository.findOne({ where: { email } });
