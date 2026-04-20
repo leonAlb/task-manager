@@ -4,7 +4,7 @@ import { AuthCredentials, AuthResponse } from '../models/auth.models';
 import { tap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
-export class Auth {
+export class AuthService {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:3000/auth';
 

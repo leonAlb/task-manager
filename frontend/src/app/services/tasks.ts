@@ -2,12 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Task, UpdateTask } from '../models/tasks.models';
-import { User} from '../models/auth.models';
+import { User } from '../models/auth.models';
 
 @Injectable({
   providedIn: 'root',
 })
-export class Tasks {
+export class TasksService {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:3000/tasks';
 
@@ -24,7 +24,10 @@ export class Tasks {
   }
 
   updateTask(updateTask: UpdateTask) {
-    return this.http.patch<Task>(`${this.apiUrl}/${updateTask.id}`, updateTask);
+    return this.http.patch<Task>(`${this.apiUrl}/${updateTask.id}`, {
+      title: updateTask.title,
+      status: updateTask.status,
+    });
   }
 
   deleteTask(id: number) {
