@@ -1,0 +1,15 @@
+import { Module } from '@nestjs/common';
+import { AdminController } from './controller/admin.controller';
+import { AdminService } from './service/admin.service';
+import { User } from '../auth/entities/user.entity';
+import { Task } from '../tasks/entities/task.entity';
+import { TypeOrmModule } from '@nestjs/typeorm/dist/typeorm.module';
+import { AdminGuard } from './guard/admin.guard';
+import { AuthModule } from '../auth/auth.module';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([User, Task]), AuthModule],
+  controllers: [AdminController],
+  providers: [AdminService, AdminGuard],
+})
+export class AdminModule {}

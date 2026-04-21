@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Task, TaskStatus } from '../task.entity';
+import { Task, TaskStatus } from '../entities/task.entity';
 import { AuthService } from '../../auth/service/auth.service';
 
 @Injectable()

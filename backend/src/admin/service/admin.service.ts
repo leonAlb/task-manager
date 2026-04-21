@@ -1,12 +1,12 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { User } from '../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import { User } from '../../auth/entities/user.entity';
 
 @Injectable()
-export class SeederService implements OnApplicationBootstrap {
+export class AdminService implements OnApplicationBootstrap {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
@@ -45,7 +45,7 @@ export class SeederService implements OnApplicationBootstrap {
     await this.usersRepository.save(admin);
   }
 
-  async seedTasks() {
+  async seedData() {
     // Implement task seeding logic here if needed
   }
 }

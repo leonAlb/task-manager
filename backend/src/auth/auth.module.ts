@@ -8,8 +8,6 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthGuard } from './guard/auth.guard';
 import { User } from './entities/user.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
-import { SeederService } from './seeder/seeder.service';
-import { AdminGuard } from './guard/admin.guard';
 
 @Module({
   imports: [
@@ -29,7 +27,7 @@ import { AdminGuard } from './guard/admin.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, AuthGuard, SeederService, AdminGuard],
+  providers: [AuthService, AuthGuard],
   exports: [AuthService],
 })
 export class AuthModule {}

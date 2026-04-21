@@ -6,8 +6,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { RequestWithUser, JwtPayload } from './auth.guard';
-import { extractTokenFromHeader } from '../utils/extract-token';
+import { RequestWithUser, JwtPayload } from '../../auth/guard/auth.guard';
+import { extractTokenFromHeader } from '../../auth/utils/extract-token';
 import { ConfigService } from '@nestjs/config/dist/config.service';
 
 @Injectable()

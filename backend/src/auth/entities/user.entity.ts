@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { RefreshToken } from './refresh-token.entity';
-import { Task } from '../../tasks/task.entity';
+import { Task } from '../../tasks/entities/task.entity';
 
 @Entity()
 export class User {

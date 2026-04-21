@@ -5,7 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { User } from '../auth/entities/user.entity';
+import { User } from '../../auth/entities/user.entity';
 
 export enum TaskStatus {
   TODO = 'todo',
@@ -31,7 +31,7 @@ export class Task {
   @Column()
   userId: number;
 
-  @ManyToOne(() => User, (user) => user.tasks)
+  @ManyToOne(() => User, (user) => user.tasks, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user: User;
 }
