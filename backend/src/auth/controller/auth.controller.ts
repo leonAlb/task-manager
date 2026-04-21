@@ -1,12 +1,28 @@
-import { Body, Controller, Post, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  HttpCode,
+  HttpStatus,
+  Get,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from '../service/auth.service';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
+import { AuthGuard } from '../guard/auth.guard';
+import { CurrentUser } from '../decorator/current-user.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
+
+  @Get('me')
+  @UseGuards(AuthGuard)
+  async returnMe(@CurrentUser('email') email: string) {
+    return await this.authService.returnMe(email);
+  }
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {

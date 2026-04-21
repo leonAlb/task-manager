@@ -44,4 +44,8 @@ export class SeederService implements OnApplicationBootstrap {
 
     await this.usersRepository.save(admin);
   }
+
+  async seedTasks() {
+    // Implement task seeding logic here if needed
+  }
 }

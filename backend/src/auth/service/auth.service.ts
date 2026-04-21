@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
@@ -21,6 +22,26 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
+
+  async returnMe(email: string) {
+    const user = await this.usersRepository.findOne({ where: { email } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const safeUser = {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      tasks: user.tasks,
+    };
+
+    const isAdmin =
+      user.email === this.configService.getOrThrow<string>('ADMIN_EMAIL');
+
+    return { ...safeUser, isAdmin };
+  }
 
   async login(email: string, password: string) {
     const user = await this.usersRepository.findOne({ where: { email } });

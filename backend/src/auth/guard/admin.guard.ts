@@ -1,25 +1,21 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
+import { RequestWithUser, JwtPayload } from './auth.guard';
 import { extractTokenFromHeader } from '../utils/extract-token';
-
-export interface JwtPayload {
-  sub: number;
-  email: string;
-}
-
-export interface RequestWithUser extends Request {
-  user: JwtPayload;
-}
+import { ConfigService } from '@nestjs/config/dist/config.service';
 
 @Injectable()
-export class AuthGuard implements CanActivate {
-  constructor(private readonly jwtService: JwtService) {}
+export class AdminGuard implements CanActivate {
+  constructor(
+    private readonly jwtService: JwtService,
+    private configService: ConfigService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<RequestWithUser>();
@@ -29,13 +25,18 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('No token provided');
     }
 
+    let payload: JwtPayload;
     try {
-      const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
-
-      request.user = payload;
+      payload = await this.jwtService.verifyAsync<JwtPayload>(token);
     } catch {
       throw new UnauthorizedException('Invalid or expired token');
     }
+
+    if (payload.email !== this.configService.get('ADMIN_EMAIL')) {
+      throw new ForbiddenException('Admin only');
+    }
+
+    request.user = payload;
     return true;
   }
 }
