@@ -1,9 +1,74 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import {
+  AbstractControl,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn,
+  Validators,
+} from '@angular/forms';
+import { AuthService } from '../../services/auth';
+import { Router, RouterLink } from '@angular/router';
+import { AuthCredentials } from '../../models/auth.models';
+
+export const passwordMatchValidator: ValidatorFn = (
+  control: AbstractControl,
+): ValidationErrors | null => {
+  const password = control.get('password')?.value;
+  const confirmPassword = control.get('confirmPassword')?.value;
+  return password && confirmPassword && password === confirmPassword ? null : { mismatch: true };
+};
 
 @Component({
   selector: 'app-register',
-  imports: [],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './register.html',
   styleUrl: './register.scss',
 })
-export class Register {}
+export class Register {
+  private auth = inject(AuthService);
+  private router = inject(Router);
+
+  form = new FormGroup(
+    {
+      email: new FormControl('', [Validators.required, Validators.email]),
+      password: new FormControl('', [Validators.required, Validators.minLength(6)]),
+      confirmPassword: new FormControl('', [Validators.required]),
+    },
+    { validators: passwordMatchValidator },
+  );
+
+  errorMessage = signal('');
+
+  onSubmit(): void {
+    if (this.form.invalid) {
+      if (this.form.hasError('mismatch')) {
+        this.errorMessage.set('Passwords do not match.');
+      }
+      return;
+    }
+
+    this.errorMessage.set('');
+    const credentials: AuthCredentials = {
+      email: this.form.value.email as string,
+      password: this.form.value.password as string,
+    };
+
+    this.auth.register(credentials).subscribe({
+      next: () => {
+        this.router.navigate(['/login']);
+      },
+      error: (err) => {
+        console.error('Registration error:', err);
+        if (err.status === 0) {
+          this.errorMessage.set('Unable to connect to the server. Is the backend running?');
+        } else {
+          this.errorMessage.set(
+            err.error?.message || err.message || 'Registration failed. Please try again.',
+          );
+        }
+      },
+    });
+  }
+}

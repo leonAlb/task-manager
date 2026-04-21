@@ -1,1 +1,20 @@
-<p>register works!</p>
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <input formControlName="email" placeholder="Email" />
+  @if (form.get('email')?.invalid && form.get('email')?.touched) {
+    <div>Email is invalid.</div>
+  }
+
+  <input formControlName="password" type="password" placeholder="Password" />
+  <div><small>Password needs to be at least 6 characters long.</small></div>
+  @if (form.get('password')?.invalid && form.get('password')?.touched) {
+    <div style="color: red">Password is too short.</div>
+  }
+
+  <input formControlName="confirmPassword" type="password" placeholder="Confirm Password" />
+
+  @if (form.hasError('mismatch') && form.get('confirmPassword')?.touched) {
+    <div style="color: red">Passwords do not match.</div>
+  }
+  <button type="submit" [disabled]="form.invalid">Register</button>
+</form>
+<div>Already have an account? <a routerLink="/login">Login here</a>.</div>

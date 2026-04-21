@@ -1,1 +1,15 @@
-<p>login works!</p>
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <input formControlName="email" placeholder="Email" />
+  @if (form.get('email')?.invalid && form.get('email')?.touched) {
+    <div>Email is invalid.</div>
+  }
+  <input formControlName="password" type="password" placeholder="Password" />
+  @if (form.get('password')?.invalid && form.get('password')?.touched) {
+    <div>Password needs to be at least 6 characters long.</div>
+  }
+  @if (errorMessage()) {
+    <div class="error-message" style="color: red">{{ errorMessage() }}</div>
+  }
+  <button type="submit" [disabled]="form.invalid">Login</button>
+</form>
+<div>Don't have an account? <a routerLink="/register">Register here</a>.</div>
