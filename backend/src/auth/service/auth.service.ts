@@ -34,6 +34,8 @@ export class AuthService {
   }
 
   async register(
+    firstName: string,
+    lastName: string,
     email: string,
     password: string,
   ): Promise<Omit<User, 'password' | 'refreshTokens'>> {
@@ -48,6 +50,8 @@ export class AuthService {
       throw new ConflictException('Email already in use');
     } else {
       const newUser = this.usersRepository.create({
+        firstName,
+        lastName,
         email,
         password: hashedPassword,
       });
@@ -55,6 +59,8 @@ export class AuthService {
 
       return {
         id: newUser.id,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
         email: newUser.email,
         tasks: newUser.tasks,
       };
