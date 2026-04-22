@@ -57,7 +57,7 @@ export class Register {
 
     this.auth.register(credentials).subscribe({
       next: () => {
-        this.router.navigate(['/login']);
+        this.router.navigate(['/tasks']);
       },
       error: (err) => {
         console.error('Registration error:', err);
@@ -65,7 +65,7 @@ export class Register {
           this.errorMessage.set('Unable to connect to the server. Is the backend running?');
         } else {
           this.errorMessage.set(
-            err.error?.message || err.message || 'Registration failed. Please try again.',
+            err.error?.message || err.message || 'Something went wrong. Please try again.',
           );
         }
       },

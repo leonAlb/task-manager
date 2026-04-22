@@ -14,3 +14,11 @@ export interface User {
   email: string;
   tasks: Task[];
 }
+
+export interface UserProfile {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  isAdmin: boolean;
+}
