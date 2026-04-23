@@ -112,7 +112,8 @@ export class AdminService implements OnApplicationBootstrap {
 
   async deleteAllData() {
     await this.usersRepository.query(
-      'CREATE TABLE IF NOT EXISTS "temp_user" AS SELECT * FROM "user" WHERE id = 1',
+      'CREATE TABLE IF NOT EXISTS "temp_user" AS SELECT * FROM "user" WHERE email = $1',
+      [this.configService.get('ADMIN_EMAIL')],
     );
     await this.usersRepository.query(
       'TRUNCATE TABLE "user" RESTART IDENTITY CASCADE',
@@ -121,8 +122,9 @@ export class AdminService implements OnApplicationBootstrap {
       'INSERT INTO "user" SELECT * FROM "temp_user"',
     );
     await this.usersRepository.query('DROP TABLE "temp_user"');
-
-    return { message: 'All data deleted except admin user' };
+    await this.usersRepository.query(
+      `SELECT setval(pg_get_serial_sequence('"user"', 'id'), (SELECT MAX(id) FROM "user"))`,
+    );
   }
 
   async deleteAllTasks() {
