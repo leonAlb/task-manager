@@ -101,7 +101,7 @@
     [cdkDropListConnectedTo]="['in_progress', 'completed']"
     (cdkDropListDropped)="onDrop($event)"
   >
-    <h2 class="column-header">To Do</h2>
+    <h2 class="column-header">To Do <span class="task-count">{{ todoTasks().length }}</span></h2>
     @for (task of todoTasks(); track task.id) {
       <div class="task-card" cdkDrag>
         <span>{{ task.title }}</span>
@@ -121,7 +121,7 @@
     [cdkDropListConnectedTo]="['todo', 'completed']"
     (cdkDropListDropped)="onDrop($event)"
   >
-    <h2 class="column-header">In Progress</h2>
+    <h2 class="column-header">In Progress <span class="task-count">{{ inProgressTasks().length }}</span></h2>
     @for (task of inProgressTasks(); track task.id) {
       <div class="task-card" cdkDrag>
         <span>{{ task.title }}</span>
@@ -141,7 +141,7 @@
     [cdkDropListConnectedTo]="['todo', 'in_progress']"
     (cdkDropListDropped)="onDrop($event)"
   >
-    <h2 class="column-header">Completed</h2>
+    <h2 class="column-header">Completed <span class="task-count">{{ completedTasks().length }}</span></h2>
     @for (task of completedTasks(); track task.id) {
       <div class="task-card completed" cdkDrag>
         <span>{{ task.title }}</span>

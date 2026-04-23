@@ -40,7 +40,7 @@ export class Tasks implements OnInit {
   // UI related
   showUserPopup = signal<boolean>(false);
   sidebarCollapsed = signal(false);
-  showAllTasksView = signal(false);
+  showAllTasksView = signal(localStorage.getItem('showAllTasksView') === 'true');
 
   // --------------------------------------------------------------
   // Injections
@@ -63,7 +63,7 @@ export class Tasks implements OnInit {
   // Task Management
   // --------------------------------------------------------------
   ngOnInit() {
-    this.tasksService.getTasks().subscribe((tasks) => this.tasks.set(tasks));
+    this.reloadTasks();
   }
 
   createTask() {
@@ -102,6 +102,7 @@ export class Tasks implements OnInit {
 
   toggleAllTasksView() {
     this.showAllTasksView.update((v) => !v);
+    localStorage.setItem('showAllTasksView', String(this.showAllTasksView()));
     if (!this.showAllTasksView()) this.users.set([]);
     this.reloadTasks();
   }

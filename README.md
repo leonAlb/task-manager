@@ -2,13 +2,31 @@
 
 A full-stack learning project to teach myself **NestJS**, **Angular**, and **PostgreSQL**.
 
-It's a Kanban-style task board where users manage their own tasks across three columns: To Do, In Progress, and Completed. Admins can see and manage tasks for all users.
+It's a Kanban-style task board where users manage their own tasks across three columns: To Do, In Progress, and Completed.
 
-## What you can do
+## Features
 
-- Register an account and log in
-- Create, delete, and drag tasks between columns
-- **As admin:** view all users' tasks, seed example data, delete users, and manage all tasks
+**For everyone**
+- Register an account and log in with JWT authentication (access + refresh tokens)
+- Create and delete tasks
+- Drag and drop tasks
+
+**For admins**
+- Toggle between your own tasks and a view of all users' tasks
+- Seed example users and tasks to populate the board
+- Manage users
+- Delete all tasks or wipe all data
+
+## Planned
+
+- Task descriptions and due dates
+- Priority levels (low / medium / high) with card indicators
+- Inline title editing
+- Drag-and-drop reordering within a column
+- Project Manager role — assign tasks to users, view team boards
+- Multiple boards per user
+- Real-time updates via WebSockets
+- Email notifications for task assignments
 
 ## Requirements
 
