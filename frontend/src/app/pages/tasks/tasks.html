@@ -1,1 +1,131 @@
-<p>tasks works!</p>
+<aside>
+  <div>{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</div>
+
+  <input
+    [value]="newTaskTitle()"
+    (input)="newTaskTitle.set($any($event.target).value)"
+    placeholder="New task title"
+  />
+  <button (click)="createTask()">Add Task</button>
+
+  @if (currentUser()?.isAdmin) {
+    <button (click)="seedData()">Seed Data</button>
+    <button (click)="deleteAllTasks()">Delete All Tasks</button>
+    <button (click)="deleteAllData()">Delete All Data</button>
+    <button (click)="toggleUserPopup()">Manage Users</button>
+  }
+
+  <button (click)="logout()">Logout</button>
+</aside>
+
+@if (showUserPopup()) {
+  <div
+    class="user-popup"
+    style="
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      padding: 20px;
+      border: 1px solid #ccc;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      max-height: 50vh;
+      overflow-y: auto;
+      border-radius: 8px;
+      min-width: 300px;
+    "
+  >
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+      "
+    >
+      <h3 style="margin: 0">All Users</h3>
+      <button (click)="toggleUserPopup()" style="cursor: pointer">&times;</button>
+    </div>
+
+    <ul style="list-style: none; padding: 0; margin: 0">
+      @for (user of users(); track user.id) {
+        <li
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+          "
+        >
+          <span>{{ user.email }} (ID: {{ user.id }})</span>
+          @if (user.email !== currentUser()?.email) {
+            <button (click)="deleteUser(user.id)" style="cursor: pointer">🗑️</button>
+          } @else {
+            <span>(Admin)</span>
+          }
+        </li>
+      }
+      @if (users().length === 0) {
+        <li>No users found.</li>
+      }
+    </ul>
+  </div>
+}
+
+<div cdkDropListGroup>
+  <div>
+    <h2>To Do</h2>
+    <div
+      cdkDropList
+      id="todo"
+      [cdkDropListData]="todoTasks()"
+      (cdkDropListDropped)="onDrop($event)"
+    >
+      @for (task of todoTasks(); track task.id) {
+        <div cdkDrag>
+          {{ task.title }}
+          <button (click)="deleteTask(task.id)">x</button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div>
+    <h2>In Progress</h2>
+    <div
+      cdkDropList
+      id="in_progress"
+      [cdkDropListData]="inProgressTasks()"
+      (cdkDropListDropped)="onDrop($event)"
+    >
+      @for (task of inProgressTasks(); track task.id) {
+        <div cdkDrag>
+          {{ task.title }}
+          <button (click)="deleteTask(task.id)">x</button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div>
+    <h2>Completed</h2>
+    <div
+      cdkDropList
+      id="completed"
+      [cdkDropListData]="completedTasks()"
+      (cdkDropListDropped)="onDrop($event)"
+    >
+      @for (task of completedTasks(); track task.id) {
+        <div cdkDrag [class.completed]="task.status === TaskStatus.COMPLETED">
+          {{ task.title }}
+          <button (click)="deleteTask(task.id)">x</button>
+        </div>
+      }
+    </div>
+  </div>
+</div>

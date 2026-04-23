@@ -1,4 +1,14 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <input formControlName="firstName" placeholder="First Name" />
+  @if (form.get('firstName')?.invalid && form.get('firstName')?.touched) {
+    <div>First Name is required.</div>
+  }
+
+  <input formControlName="lastName" placeholder="Last Name" />
+  @if (form.get('lastName')?.invalid && form.get('lastName')?.touched) {
+    <div>Last Name is required.</div>
+  }
+
   <input formControlName="email" placeholder="Email" />
   @if (form.get('email')?.invalid && form.get('email')?.touched) {
     <div>Email is invalid.</div>
@@ -15,6 +25,11 @@
   @if (form.hasError('mismatch') && form.get('confirmPassword')?.touched) {
     <div style="color: red">Passwords do not match.</div>
   }
+
+  @if (errorMessage()) {
+    <div style="color: red">{{ errorMessage() }}</div>
+  }
+
   <button type="submit" [disabled]="form.invalid">Register</button>
 </form>
 <div>Already have an account? <a routerLink="/login">Login here</a>.</div>

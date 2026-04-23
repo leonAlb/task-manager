@@ -10,7 +10,7 @@ import {
 } from '@angular/forms';
 import { AuthService } from '../../services/auth';
 import { Router, RouterLink } from '@angular/router';
-import { AuthCredentials } from '../../models/auth.models';
+import { RegisterCredentials } from '../../models/auth.models';
 
 export const passwordMatchValidator: ValidatorFn = (
   control: AbstractControl,
@@ -32,6 +32,8 @@ export class Register {
 
   form = new FormGroup(
     {
+      firstName: new FormControl('', [Validators.required]),
+      lastName: new FormControl('', [Validators.required]),
       email: new FormControl('', [Validators.required, Validators.email]),
       password: new FormControl('', [Validators.required, Validators.minLength(6)]),
       confirmPassword: new FormControl('', [Validators.required]),
@@ -45,12 +47,16 @@ export class Register {
     if (this.form.invalid) {
       if (this.form.hasError('mismatch')) {
         this.errorMessage.set('Passwords do not match.');
+      } else {
+        this.errorMessage.set('Please fill out all fields correctly.');
       }
       return;
     }
 
     this.errorMessage.set('');
-    const credentials: AuthCredentials = {
+    const credentials: RegisterCredentials = {
+      firstName: this.form.value.firstName as string,
+      lastName: this.form.value.lastName as string,
       email: this.form.value.email as string,
       password: this.form.value.password as string,
     };

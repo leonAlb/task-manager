@@ -20,8 +20,8 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(AuthGuard)
-  async returnMe(@CurrentUser('email') email: string) {
-    return await this.authService.returnMe(email);
+  async getMe(@CurrentUser('email') email: string) {
+    return await this.authService.getMe(email);
   }
 
   @Post('login')

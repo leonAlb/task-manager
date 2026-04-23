@@ -110,7 +110,7 @@ export class AdminService implements OnApplicationBootstrap {
     return { message: 'Seeded successfully' };
   }
 
-  async clearAllData() {
+  async deleteAllData() {
     await this.usersRepository.query(
       'CREATE TABLE IF NOT EXISTS "temp_user" AS SELECT * FROM "user" WHERE id = 1',
     );
@@ -122,18 +122,18 @@ export class AdminService implements OnApplicationBootstrap {
     );
     await this.usersRepository.query('DROP TABLE "temp_user"');
 
-    return { message: 'All data cleared except admin user' };
+    return { message: 'All data deleted except admin user' };
   }
 
-  async clearTasks() {
+  async deleteAllTasks() {
     await this.tasksRepository.query(
       'TRUNCATE TABLE "task" RESTART IDENTITY CASCADE',
     );
 
-    return { message: 'All tasks cleared' };
+    return { message: 'All tasks deleted' };
   }
 
-  async clearUser(id: number) {
+  async deleteUser(id: number) {
     const user = await this.usersRepository.findOne({ where: { id } });
 
     if (!user) {

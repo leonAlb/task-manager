@@ -23,7 +23,7 @@ export class AuthService {
     private configService: ConfigService,
   ) {}
 
-  async returnMe(email: string) {
+  async getMe(email: string) {
     const user = await this.usersRepository.findOne({ where: { email } });
     if (!user) {
       throw new NotFoundException('User not found');
@@ -170,6 +170,8 @@ export class AuthService {
     const users = await this.usersRepository.find({ relations: ['tasks'] });
     return users.map((user) => ({
       id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
       tasks: user.tasks,
     }));

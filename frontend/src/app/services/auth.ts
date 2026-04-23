@@ -1,6 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { AuthCredentials, AuthResponse, UserProfile } from '../models/auth.models';
+import {
+  AuthCredentials,
+  AuthResponse,
+  RegisterCredentials,
+  UserProfile,
+} from '../models/auth.models';
 import { switchMap, tap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
@@ -16,10 +21,12 @@ export class AuthService {
   }
 
   // Registration method
-  register(credentials: AuthCredentials) {
+  register(credentials: RegisterCredentials) {
     return this.http
       .post<void>(`${this.apiUrl}/register`, credentials)
-      .pipe(switchMap(() => this.login(credentials)));
+      .pipe(
+        switchMap(() => this.login({ email: credentials.email, password: credentials.password })),
+      );
   }
 
   // Login method that stores tokens in localStorage and updates the current user profile
@@ -37,13 +44,13 @@ export class AuthService {
   // Logout method that removes tokens from localStorage
   logout() {
     const refreshToken = localStorage.getItem('refresh_token');
-    return this.http.post(`${this.apiUrl}/logout`, { refresh_token: refreshToken }).pipe(
-      tap(() => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        this.currentUser.set(null);
-      }),
-    );
+
+    // Clear tokens immediately so the UI signs out and stops using them
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    this.currentUser.set(null);
+
+    return this.http.post(`${this.apiUrl}/logout`, { refresh_token: refreshToken });
   }
 
   // Method to refresh access token using the refresh token

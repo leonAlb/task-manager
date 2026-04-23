@@ -12,21 +12,21 @@ export class AdminController {
     return await this.adminService.seedData();
   }
 
-  @Delete('clear-all')
+  @Delete('delete-all')
   @UseGuards(AdminGuard)
-  async clearAllData() {
-    return await this.adminService.clearAllData();
+  async deleteAllData() {
+    return await this.adminService.deleteAllData();
   }
 
-  @Delete('clear-tasks')
+  @Delete('delete-tasks')
   @UseGuards(AdminGuard)
-  async clearTasks() {
-    return await this.adminService.clearTasks();
+  async deleteAllTasks() {
+    return await this.adminService.deleteAllTasks();
   }
 
-  @Delete('clear-user/:id')
+  @Delete('delete-user/:id')
   @UseGuards(AdminGuard)
-  async clearUsers(@Param('id', ParseIntPipe) id: number) {
-    return await this.adminService.clearUser(id);
+  async deleteUser(@Param('id', ParseIntPipe) id: number) {
+    return await this.adminService.deleteUser(id);
   }
 }
