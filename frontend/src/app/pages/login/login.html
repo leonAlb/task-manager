@@ -1,15 +1,40 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <input formControlName="email" placeholder="Email" />
-  @if (form.get('email')?.invalid && form.get('email')?.touched) {
-    <div>Email is invalid.</div>
-  }
-  <input formControlName="password" type="password" placeholder="Password" />
-  @if (form.get('password')?.invalid && form.get('password')?.touched) {
-    <div>Password needs to be at least 6 characters long.</div>
-  }
-  @if (errorMessage()) {
-    <div class="error-message" style="color: red">{{ errorMessage() }}</div>
-  }
-  <button type="submit" [disabled]="form.invalid">Login</button>
-</form>
-<div>Don't have an account? <a routerLink="/register">Register here</a>.</div>
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>Task Manager</h1>
+      <p>Sign in to your account</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="field">
+        <label>Email <span class="req">*</span></label>
+        <input
+          formControlName="email"
+          type="email"
+          placeholder="you@example.com"
+          [class.invalid]="form.get('email')?.invalid && form.get('email')?.touched"
+        />
+        <span class="field-hint" [class.visible]="form.get('email')?.invalid && form.get('email')?.touched">Enter a valid email address</span>
+      </div>
+
+      <div class="field">
+        <label>Password <span class="req">*</span></label>
+        <input
+          formControlName="password"
+          type="password"
+          placeholder="••••••"
+          [class.invalid]="form.get('password')?.invalid && form.get('password')?.touched"
+        />
+        <span class="field-hint" [class.visible]="form.get('password')?.invalid && form.get('password')?.touched">At least 6 characters</span>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="error-banner">{{ errorMessage() }}</div>
+      }
+
+      <button type="submit" class="btn-primary" [disabled]="form.invalid">Sign in</button>
+    </form>
+
+    <p class="auth-switch">Don't have an account? <a routerLink="/register">Register</a></p>
+  </div>
+</div>

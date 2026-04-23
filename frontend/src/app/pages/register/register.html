@@ -1,35 +1,75 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <input formControlName="firstName" placeholder="First Name" />
-  @if (form.get('firstName')?.invalid && form.get('firstName')?.touched) {
-    <div>First Name is required.</div>
-  }
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>Task Manager</h1>
+      <p>Create your account</p>
+    </div>
 
-  <input formControlName="lastName" placeholder="Last Name" />
-  @if (form.get('lastName')?.invalid && form.get('lastName')?.touched) {
-    <div>Last Name is required.</div>
-  }
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="field-row">
+        <div class="field">
+          <label>First Name <span class="req">*</span></label>
+          <input
+            formControlName="firstName"
+            placeholder="John"
+            [class.invalid]="form.get('firstName')?.invalid && form.get('firstName')?.touched"
+          />
+          <span class="field-hint" [class.visible]="form.get('firstName')?.invalid && form.get('firstName')?.touched">Required</span>
+        </div>
 
-  <input formControlName="email" placeholder="Email" />
-  @if (form.get('email')?.invalid && form.get('email')?.touched) {
-    <div>Email is invalid.</div>
-  }
+        <div class="field">
+          <label>Last Name <span class="req">*</span></label>
+          <input
+            formControlName="lastName"
+            placeholder="Doe"
+            [class.invalid]="form.get('lastName')?.invalid && form.get('lastName')?.touched"
+          />
+          <span class="field-hint" [class.visible]="form.get('lastName')?.invalid && form.get('lastName')?.touched">Required</span>
+        </div>
+      </div>
 
-  <input formControlName="password" type="password" placeholder="Password" />
-  <div><small>Password needs to be at least 6 characters long.</small></div>
-  @if (form.get('password')?.invalid && form.get('password')?.touched) {
-    <div style="color: red">Password is too short.</div>
-  }
+      <div class="field">
+        <label>Email <span class="req">*</span></label>
+        <input
+          formControlName="email"
+          type="email"
+          placeholder="you@example.com"
+          [class.invalid]="form.get('email')?.invalid && form.get('email')?.touched"
+        />
+        <span class="field-hint" [class.visible]="form.get('email')?.invalid && form.get('email')?.touched">Enter a valid email address</span>
+      </div>
 
-  <input formControlName="confirmPassword" type="password" placeholder="Confirm Password" />
+      <div class="field">
+        <label>Password <span class="req">*</span></label>
+        <input
+          formControlName="password"
+          type="password"
+          placeholder="••••••"
+          [class.invalid]="form.get('password')?.invalid && form.get('password')?.touched"
+        />
+        <span class="field-hint visible">
+          {{ form.get('password')?.invalid && form.get('password')?.touched ? 'Too short' : 'At least 6 characters' }}
+        </span>
+      </div>
 
-  @if (form.hasError('mismatch') && form.get('confirmPassword')?.touched) {
-    <div style="color: red">Passwords do not match.</div>
-  }
+      <div class="field">
+        <label>Confirm Password <span class="req">*</span></label>
+        <input
+          formControlName="confirmPassword"
+          type="password"
+          placeholder="••••••"
+          [class.invalid]="form.hasError('mismatch') && form.get('confirmPassword')?.touched"
+        />
+        <span class="field-hint" [class.visible]="form.hasError('mismatch') && form.get('confirmPassword')?.touched">Passwords do not match</span>
+      </div>
 
-  @if (errorMessage()) {
-    <div style="color: red">{{ errorMessage() }}</div>
-  }
+      @if (errorMessage()) {
+        <div class="error-banner">{{ errorMessage() }}</div>
+      }
 
-  <button type="submit" [disabled]="form.invalid">Register</button>
-</form>
-<div>Already have an account? <a routerLink="/login">Login here</a>.</div>
+      <button type="submit" class="btn-primary" [disabled]="form.invalid">Create account</button>
+    </form>
+
+    <p class="auth-switch">Already have an account? <a routerLink="/login">Sign in</a></p>
+  </div>
+</div>
