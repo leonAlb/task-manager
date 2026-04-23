@@ -5,7 +5,12 @@ import { TasksService } from '../../services/tasks';
 import { AuthService } from '../../services/auth';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
+import {
+  CdkDrag,
+  CdkDragDrop,
+  CdkDropList,
+  CdkDropListGroup,
+} from '@angular/cdk/drag-drop';
 import { AdminService } from '../../services/admin';
 
 @Component({
@@ -59,9 +64,17 @@ export class Tasks implements OnInit {
   }
 
   moveTask(task: Task, newStatus: TaskStatus) {
+    const previousTasks = this.tasks();
+
+    this.tasks.update((tasks) =>
+      tasks.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t)),
+    );
+
     const updatedTask = { ...task, status: newStatus };
-    this.tasksService.updateTask(updatedTask).subscribe((updated) => {
-      this.tasks.update((tasks) => tasks.map((t) => (t.id === updated.id ? updated : t)));
+    this.tasksService.updateTask(updatedTask).subscribe({
+      error: () => {
+        this.tasks.set(previousTasks);
+      },
     });
   }
 
@@ -120,6 +133,16 @@ export class Tasks implements OnInit {
 
     const task = event.previousContainer.data[event.previousIndex];
     const newStatus = event.container.id as TaskStatus;
+
+    this.tasks.update((tasks) => {
+      const filtered = tasks.filter((t) => t.id !== task.id);
+      const updatedTask = { ...task, status: newStatus };
+      const targetTasks = filtered.filter((t) => t.status === newStatus);
+      const insertIndex = filtered.indexOf(targetTasks[event.currentIndex]) + 1;
+      filtered.splice(insertIndex === 0 ? filtered.length : insertIndex - 1, 0, updatedTask);
+      return [...filtered];
+    });
+
     this.moveTask(task, newStatus);
   }
 }

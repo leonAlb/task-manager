@@ -4,3 +4,17 @@
   text-decoration: line-through;
   opacity: 0.5;
 }
+
+[cdkDropListGroup] {
+  display: flex;
+  gap: 16px;
+}
+
+[cdkDropListGroup] > div {
+  flex: 1;
+}
+
+[cdkDropList] {
+  min-height: 100px;
+  border: 2px dashed #ccc;
+}
