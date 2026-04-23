@@ -76,37 +76,70 @@ export class AdminService implements OnApplicationBootstrap {
       defaultPassword,
     );
 
-    const existingTasksCount = await this.tasksRepository.count({
-      where: [
-        { user: { id: user1.id } },
-        { user: { id: user2.id } },
-        { user: { id: user3.id } },
-      ],
+    const user1Tasks = await this.tasksRepository.count({
+      where: { userId: user1.id },
+    });
+    const user2Tasks = await this.tasksRepository.count({
+      where: { userId: user2.id },
+    });
+    const user3Tasks = await this.tasksRepository.count({
+      where: { userId: user3.id },
     });
 
-    if (existingTasksCount === 0) {
-      const tasks = this.tasksRepository.create([
-        // User 1 tasks (1 TODO, 1 IN_PROGRESS, 1 COMPLETED)
-        { title: 'Example Task 1', status: TaskStatus.TODO, user: user1 },
-        {
-          title: 'Example Task 2',
-          status: TaskStatus.IN_PROGRESS,
-          user: user1,
-        },
-        { title: 'Example Task 3', status: TaskStatus.COMPLETED, user: user1 },
-
-        // User 2 tasks (3 TODO)
-        { title: 'Learn Angular', status: TaskStatus.TODO, user: user2 },
-        { title: 'Master NestJS', status: TaskStatus.TODO, user: user2 },
-        { title: 'Build fullstack app', status: TaskStatus.TODO, user: user2 },
-
-        // User 3 tasks (1 TODO, 2 IN_PROGRESS)
-        { title: 'Write tests', status: TaskStatus.TODO, user: user3 },
-        { title: 'Refactor code', status: TaskStatus.IN_PROGRESS, user: user3 },
-        { title: 'Update README', status: TaskStatus.IN_PROGRESS, user: user3 },
-      ]);
-      await this.tasksRepository.save(tasks);
+    if (user1Tasks === 0) {
+      await this.tasksRepository.save(
+        this.tasksRepository.create([
+          {
+            title: 'Example Task 1',
+            status: TaskStatus.TODO,
+            userId: user1.id,
+          },
+          {
+            title: 'Example Task 2',
+            status: TaskStatus.IN_PROGRESS,
+            userId: user1.id,
+          },
+          {
+            title: 'Example Task 3',
+            status: TaskStatus.COMPLETED,
+            userId: user1.id,
+          },
+        ]),
+      );
     }
+
+    if (user2Tasks === 0) {
+      await this.tasksRepository.save(
+        this.tasksRepository.create([
+          { title: 'Learn Angular', status: TaskStatus.TODO, userId: user2.id },
+          { title: 'Master NestJS', status: TaskStatus.TODO, userId: user2.id },
+          {
+            title: 'Build fullstack app',
+            status: TaskStatus.TODO,
+            userId: user2.id,
+          },
+        ]),
+      );
+    }
+
+    if (user3Tasks === 0) {
+      await this.tasksRepository.save(
+        this.tasksRepository.create([
+          { title: 'Write tests', status: TaskStatus.TODO, userId: user3.id },
+          {
+            title: 'Refactor code',
+            status: TaskStatus.IN_PROGRESS,
+            userId: user3.id,
+          },
+          {
+            title: 'Update README',
+            status: TaskStatus.IN_PROGRESS,
+            userId: user3.id,
+          },
+        ]),
+      );
+    }
+
     return { message: 'Seeded successfully' };
   }
 

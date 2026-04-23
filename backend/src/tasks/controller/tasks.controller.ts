@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { TasksService } from '../service/tasks.service';
 import { AuthGuard } from '../../auth/guard/auth.guard';
+import { AdminGuard } from '../../admin/guard/admin.guard';
 import type { Request } from 'express';
 import { CreateTaskDto } from '../dto/create-task.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
@@ -21,8 +22,9 @@ import { UpdateTaskDto } from '../dto/update-task.dto';
 export class TasksController {
   constructor(private tasksService: TasksService) {}
 
-  // Get all users with all their tasks
+  // Get all users with all their tasks (admin only)
   @Get('users')
+  @UseGuards(AdminGuard)
   async getUsers() {
     return await this.tasksService.getUsers();
   }

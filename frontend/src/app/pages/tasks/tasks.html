@@ -1,131 +1,155 @@
-<aside>
-  <div>{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</div>
+<div class="layout" [class.sidebar-collapsed]="sidebarCollapsed()">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="user-profile">
+        <div class="avatar">
+          {{ currentUser()?.firstName?.charAt(0) }}{{ currentUser()?.lastName?.charAt(0) }}
+        </div>
+        @if (!sidebarCollapsed()) {
+          <div class="user-info">
+            <span class="user-name"
+              >{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</span
+            >
+            <span class="user-role">{{ currentUser()?.isAdmin ? 'Admin' : 'User' }}</span>
+          </div>
+        }
+      </div>
+      <button class="collapse-btn" (click)="sidebarCollapsed.update((v) => !v)">
+        {{ sidebarCollapsed() ? '→' : '←' }}
+      </button>
+    </div>
 
-  <input
-    [value]="newTaskTitle()"
-    (input)="newTaskTitle.set($any($event.target).value)"
-    placeholder="New task title"
-  />
-  <button (click)="createTask()">Add Task</button>
+    @if (!sidebarCollapsed()) {
+      <div class="sidebar-content">
+        <div class="create-task">
+          <input
+            [value]="newTaskTitle()"
+            (input)="newTaskTitle.set($any($event.target).value)"
+            (keyup.enter)="createTask()"
+            placeholder="New task title"
+          />
+          <button (click)="createTask()">Add Task</button>
+        </div>
 
-  @if (currentUser()?.isAdmin) {
-    <button (click)="seedData()">Seed Data</button>
-    <button (click)="deleteAllTasks()">Delete All Tasks</button>
-    <button (click)="deleteAllData()">Delete All Data</button>
-    <button (click)="toggleUserPopup()">Manage Users</button>
+        @if (currentUser()?.isAdmin) {
+          <div class="admin-section">
+            <span class="section-label">Admin</span>
+            <button class="btn-admin" (click)="seedData()">Seed Data</button>
+            <button class="btn-admin" (click)="toggleAllTasksView()">
+              {{ showAllTasksView() ? 'My Tasks' : 'All Tasks' }}
+            </button>
+            <button class="btn-admin" (click)="deleteAllTasks()">Delete All Tasks</button>
+            <button class="btn-danger" (click)="deleteAllData()">Delete All Data</button>
+            <button class="btn-admin" (click)="toggleUserPopup()">Manage Users</button>
+          </div>
+        }
+
+        <div class="sidebar-footer">
+          <button class="btn-theme" (click)="themeService.toggleTheme()">
+            {{ themeService.currentTheme() === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode' }}
+          </button>
+          <button class="btn-logout" (click)="logout()">Logout</button>
+        </div>
+      </div>
+    }
+
+    @if (sidebarCollapsed()) {
+      <div class="sidebar-icons">
+        <button class="btn-theme icon-btn" (click)="themeService.toggleTheme()">
+          {{ themeService.currentTheme() === 'dark' ? '☀️' : '🌙' }}
+        </button>
+        <button class="btn-logout icon-btn" (click)="logout()">⏻</button>
+      </div>
+    }
+  </aside>
+
+  <!-- USER POPUP -->
+  @if (showUserPopup()) {
+    <div class="popup-overlay" (click)="toggleUserPopup()">
+      <div class="user-popup" (click)="$event.stopPropagation()">
+        <div class="popup-header">
+          <h3>Manage Users</h3>
+          <button (click)="toggleUserPopup()">&times;</button>
+        </div>
+        <ul>
+          @for (user of users(); track user.id) {
+            <li>
+              <span>{{ user.firstName }} {{ user.lastName }}</span>
+              <span class="user-email">{{ user.email }}</span>
+              @if (user.email !== currentUser()?.email) {
+                <button class="btn-danger" (click)="deleteUser(user.id)">🗑️</button>
+              } @else {
+                <span class="admin-badge">Admin</span>
+              }
+            </li>
+          }
+          @if (users().length === 0) {
+            <li>No users found.</li>
+          }
+        </ul>
+      </div>
+    </div>
   }
 
-  <button (click)="logout()">Logout</button>
-</aside>
-
-@if (showUserPopup()) {
+  <!-- KANBAN COLUMNS -->
   <div
-    class="user-popup"
-    style="
-      position: fixed;
-      top: 20%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: white;
-      padding: 20px;
-      border: 1px solid #ccc;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      z-index: 1000;
-      max-height: 50vh;
-      overflow-y: auto;
-      border-radius: 8px;
-      min-width: 300px;
-    "
+    class="column todo-column"
+    cdkDropList
+    id="todo"
+    [cdkDropListData]="todoTasks()"
+    [cdkDropListConnectedTo]="['in_progress', 'completed']"
+    (cdkDropListDropped)="onDrop($event)"
   >
-    <div
-      style="
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #eee;
-        margin-bottom: 10px;
-        padding-bottom: 10px;
-      "
-    >
-      <h3 style="margin: 0">All Users</h3>
-      <button (click)="toggleUserPopup()" style="cursor: pointer">&times;</button>
-    </div>
-
-    <ul style="list-style: none; padding: 0; margin: 0">
-      @for (user of users(); track user.id) {
-        <li
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-          "
-        >
-          <span>{{ user.email }} (ID: {{ user.id }})</span>
-          @if (user.email !== currentUser()?.email) {
-            <button (click)="deleteUser(user.id)" style="cursor: pointer">🗑️</button>
-          } @else {
-            <span>(Admin)</span>
-          }
-        </li>
-      }
-      @if (users().length === 0) {
-        <li>No users found.</li>
-      }
-    </ul>
-  </div>
-}
-
-<div cdkDropListGroup>
-  <div>
-    <h2>To Do</h2>
-    <div
-      cdkDropList
-      id="todo"
-      [cdkDropListData]="todoTasks()"
-      (cdkDropListDropped)="onDrop($event)"
-    >
-      @for (task of todoTasks(); track task.id) {
-        <div cdkDrag>
-          {{ task.title }}
-          <button (click)="deleteTask(task.id)">x</button>
-        </div>
-      }
-    </div>
+    <h2 class="column-header">To Do</h2>
+    @for (task of todoTasks(); track task.id) {
+      <div class="task-card" cdkDrag>
+        <span>{{ task.title }}</span>
+        @if (showAllTasksView()) {
+          <span class="task-owner">{{ getUserName(task.userId) }}</span>
+        }
+        <button class="delete-btn" (click)="deleteTask(task.id)">×</button>
+      </div>
+    }
   </div>
 
-  <div>
-    <h2>In Progress</h2>
-    <div
-      cdkDropList
-      id="in_progress"
-      [cdkDropListData]="inProgressTasks()"
-      (cdkDropListDropped)="onDrop($event)"
-    >
-      @for (task of inProgressTasks(); track task.id) {
-        <div cdkDrag>
-          {{ task.title }}
-          <button (click)="deleteTask(task.id)">x</button>
-        </div>
-      }
-    </div>
+  <div
+    class="column in-progress-column"
+    cdkDropList
+    id="in_progress"
+    [cdkDropListData]="inProgressTasks()"
+    [cdkDropListConnectedTo]="['todo', 'completed']"
+    (cdkDropListDropped)="onDrop($event)"
+  >
+    <h2 class="column-header">In Progress</h2>
+    @for (task of inProgressTasks(); track task.id) {
+      <div class="task-card" cdkDrag>
+        <span>{{ task.title }}</span>
+        @if (showAllTasksView()) {
+          <span class="task-owner">{{ getUserName(task.userId) }}</span>
+        }
+        <button class="delete-btn" (click)="deleteTask(task.id)">×</button>
+      </div>
+    }
   </div>
 
-  <div>
-    <h2>Completed</h2>
-    <div
-      cdkDropList
-      id="completed"
-      [cdkDropListData]="completedTasks()"
-      (cdkDropListDropped)="onDrop($event)"
-    >
-      @for (task of completedTasks(); track task.id) {
-        <div cdkDrag [class.completed]="task.status === TaskStatus.COMPLETED">
-          {{ task.title }}
-          <button (click)="deleteTask(task.id)">x</button>
-        </div>
-      }
-    </div>
+  <div
+    class="column completed-column"
+    cdkDropList
+    id="completed"
+    [cdkDropListData]="completedTasks()"
+    [cdkDropListConnectedTo]="['todo', 'in_progress']"
+    (cdkDropListDropped)="onDrop($event)"
+  >
+    <h2 class="column-header">Completed</h2>
+    @for (task of completedTasks(); track task.id) {
+      <div class="task-card completed" cdkDrag>
+        <span>{{ task.title }}</span>
+        @if (showAllTasksView()) {
+          <span class="task-owner">{{ getUserName(task.userId) }}</span>
+        }
+        <button class="delete-btn" (click)="deleteTask(task.id)">×</button>
+      </div>
+    }
   </div>
 </div>

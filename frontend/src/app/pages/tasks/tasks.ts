@@ -12,10 +12,11 @@ import {
   CdkDropListGroup,
 } from '@angular/cdk/drag-drop';
 import { AdminService } from '../../services/admin';
+import { ThemeService } from '../../services/theme';
 
 @Component({
   selector: 'app-tasks',
-  imports: [CdkDrag, CdkDropList, CdkDropListGroup, CommonModule],
+  imports: [CdkDrag, CdkDropList, CommonModule],
   templateUrl: './tasks.html',
   styleUrl: './tasks.scss',
 })
@@ -23,14 +24,23 @@ export class Tasks implements OnInit {
   // --------------------------------------------------------------
   // Signals & Computed
   // --------------------------------------------------------------
+
+  // Task related
   tasks = signal<Task[]>([]);
   todoTasks = computed(() => this.tasks().filter((t) => t.status === TaskStatus.TODO));
   inProgressTasks = computed(() => this.tasks().filter((t) => t.status === TaskStatus.IN_PROGRESS));
   completedTasks = computed(() => this.tasks().filter((t) => t.status === TaskStatus.COMPLETED));
   newTaskTitle = signal('');
+
+  // User related
   currentUser = computed(() => this.authService.currentUser());
   users = signal<User[]>([]);
+
+
+  // UI related
   showUserPopup = signal<boolean>(false);
+  sidebarCollapsed = signal(false);
+  showAllTasksView = signal(false);
 
   // --------------------------------------------------------------
   // Injections
@@ -38,8 +48,16 @@ export class Tasks implements OnInit {
   private tasksService = inject(TasksService);
   private authService = inject(AuthService);
   private adminService = inject(AdminService);
+  themeService = inject(ThemeService);
   private router = inject(Router);
   TaskStatus = TaskStatus;
+
+  // --------------------------------------------------------------
+  // UI State
+  // --------------------------------------------------------------
+  toggleSidebar() {
+  this.sidebarCollapsed.update((v) => !v);
+}
 
   // --------------------------------------------------------------
   // Task Management
@@ -82,6 +100,17 @@ export class Tasks implements OnInit {
   // AdminStuff
   // --------------------------------------------------------------
 
+  toggleAllTasksView() {
+    this.showAllTasksView.update((v) => !v);
+    if (!this.showAllTasksView()) this.users.set([]);
+    this.reloadTasks();
+  }
+
+  getUserName(userId: number): string {
+    const user = this.users().find((u) => u.id === userId);
+    return user ? `${user.firstName} ${user.lastName}` : '';
+  }
+
   toggleUserPopup() {
     this.showUserPopup.update((show) => !show);
     if (this.showUserPopup()) {
@@ -89,15 +118,25 @@ export class Tasks implements OnInit {
     }
   }
 
-  seedData() {
-    this.adminService.seedData().subscribe(() => {
+  private reloadTasks() {
+    if (this.showAllTasksView()) {
+      this.tasksService.getUsers().subscribe((users) => {
+        this.users.set(users);
+        this.tasks.set(users.flatMap((u) => u.tasks));
+      });
+    } else {
       this.tasksService.getTasks().subscribe((tasks) => this.tasks.set(tasks));
-    });
+    }
+  }
+
+  seedData() {
+    this.adminService.seedData().subscribe(() => this.reloadTasks());
   }
 
   deleteAllData() {
     this.adminService.deleteAllData().subscribe(() => {
       this.tasks.set([]);
+      this.users.set([]);
     });
   }
 
