@@ -7,11 +7,13 @@ It's a Kanban-style task board where users manage their own tasks across three c
 ## Features
 
 **For everyone**
+
 - Register an account and log in with JWT authentication (access + refresh tokens)
 - Create and delete tasks
 - Drag and drop tasks
 
 **For admins**
+
 - Toggle between your own tasks and a view of all users' tasks
 - Seed example users and tasks to populate the board
 - Manage users
@@ -19,9 +21,6 @@ It's a Kanban-style task board where users manage their own tasks across three c
 
 ## Planned
 
-- Task descriptions and due dates
-- Priority levels (low / medium / high) with card indicators
-- Inline title editing
 - Drag-and-drop reordering within a column
 - Project Manager role — assign tasks to users, view team boards
 - Multiple boards per user
@@ -83,9 +82,9 @@ Open [http://localhost:4200](http://localhost:4200) in your browser.
 
 ## Stack
 
-| Layer    | Tech                  |
-|----------|-----------------------|
-| Frontend | Angular 19            |
-| Backend  | NestJS                |
-| Database | PostgreSQL + TypeORM  |
-| Auth     | JWT (access + refresh)|
+| Layer    | Tech                   |
+| -------- | ---------------------- |
+| Frontend | Angular 19             |
+| Backend  | NestJS                 |
+| Database | PostgreSQL + TypeORM   |
+| Auth     | JWT (access + refresh) |

@@ -1,16 +1,11 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Task, TaskStatus } from '../../models/tasks.models';
+import { CreateTask, Task, TaskPriority, TaskStatus, UpdateTask } from '../../models/tasks.models';
 import { User } from '../../models/auth.models';
 import { TasksService } from '../../services/tasks';
 import { AuthService } from '../../services/auth';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import {
-  CdkDrag,
-  CdkDragDrop,
-  CdkDropList,
-  CdkDropListGroup,
-} from '@angular/cdk/drag-drop';
+import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { AdminService } from '../../services/admin';
 import { ThemeService } from '../../services/theme';
 
@@ -30,17 +25,54 @@ export class Tasks implements OnInit {
   todoTasks = computed(() => this.tasks().filter((t) => t.status === TaskStatus.TODO));
   inProgressTasks = computed(() => this.tasks().filter((t) => t.status === TaskStatus.IN_PROGRESS));
   completedTasks = computed(() => this.tasks().filter((t) => t.status === TaskStatus.COMPLETED));
-  newTaskTitle = signal('');
 
   // User related
   currentUser = computed(() => this.authService.currentUser());
   users = signal<User[]>([]);
 
-
   // UI related
-  showUserPopup = signal<boolean>(false);
+  showUserPopup = signal(false);
+  showTaskPopup = signal(false);
+  taskPopupMode = signal<'create' | 'edit'>('create');
+  editingTask = signal<Task | null>(null);
   sidebarCollapsed = signal(false);
   showAllTasksView = signal(localStorage.getItem('showAllTasksView') === 'true');
+
+  columns = [
+    {
+      id: TaskStatus.TODO,
+      title: 'To Do',
+      tasks: this.todoTasks,
+      class: 'todo-column',
+    },
+    {
+      id: TaskStatus.IN_PROGRESS,
+      title: 'In Progress',
+      tasks: this.inProgressTasks,
+      class: 'in-progress-column',
+    },
+    {
+      id: TaskStatus.COMPLETED,
+      title: 'Completed',
+      tasks: this.completedTasks,
+      class: 'completed-column',
+    },
+  ];
+
+  getConnectedLists(currentId: string): string[] {
+    return ['todo', 'in_progress', 'completed'].filter((id) => id !== currentId);
+  }
+
+  // Task form
+  newTaskTitle = signal('');
+  newTaskDescription = signal('');
+  newTaskDueDate = signal('');
+  newTaskPriority = signal<TaskPriority>(TaskPriority.MEDIUM);
+
+  isTaskFormValid = computed(
+    () =>
+      !!this.newTaskTitle().trim() && !!this.newTaskDescription().trim() && !!this.newTaskDueDate(),
+  );
 
   // --------------------------------------------------------------
   // Injections
@@ -56,8 +88,46 @@ export class Tasks implements OnInit {
   // UI State
   // --------------------------------------------------------------
   toggleSidebar() {
-  this.sidebarCollapsed.update((v) => !v);
-}
+    this.sidebarCollapsed.update((v) => !v);
+  }
+
+  openCreatePopup() {
+    this.taskPopupMode.set('create');
+    this.showTaskPopup.set(true);
+  }
+
+  openEditPopup(task: Task) {
+    this.editingTask.set(task);
+    this.newTaskTitle.set(task.title);
+    this.newTaskDescription.set(task.description);
+    this.newTaskDueDate.set(this.toDateTimeLocal(task.dueDate));
+    this.newTaskPriority.set(task.priority);
+    this.taskPopupMode.set('edit');
+    this.showTaskPopup.set(true);
+  }
+
+  closeTaskPopup() {
+    this.showTaskPopup.set(false);
+    this.editingTask.set(null);
+    this.newTaskTitle.set('');
+    this.newTaskDescription.set('');
+    this.newTaskDueDate.set('');
+    this.newTaskPriority.set(TaskPriority.MEDIUM);
+  }
+
+  private toDateTimeLocal(date: Date | string): string {
+    return new Date(date).toISOString().slice(0, 16);
+  }
+
+  closeIfOverlay(event: MouseEvent, type: 'user' | 'task') {
+    if (event.target !== event.currentTarget) return;
+
+    if (type === 'user') {
+      this.showUserPopup.set(false);
+    } else {
+      this.closeTaskPopup();
+    }
+  }
 
   // --------------------------------------------------------------
   // Task Management
@@ -67,11 +137,39 @@ export class Tasks implements OnInit {
   }
 
   createTask() {
-    if (!this.newTaskTitle()) return;
+    if (!this.newTaskTitle().trim() || !this.newTaskDescription().trim() || !this.newTaskDueDate())
+      return;
 
-    this.tasksService.createTask(this.newTaskTitle()).subscribe((task) => {
+    const newTask: CreateTask = {
+      title: this.newTaskTitle(),
+      description: this.newTaskDescription(),
+      dueDate: new Date(this.newTaskDueDate()),
+      priority: this.newTaskPriority(),
+      status: TaskStatus.TODO,
+      userId: this.currentUser()?.id || 0,
+    };
+    this.tasksService.createTask(newTask).subscribe((task) => {
       this.tasks.update((tasks) => [...tasks, task]);
-      this.newTaskTitle.set('');
+      this.closeTaskPopup();
+    });
+  }
+
+  saveTask() {
+    const editing = this.editingTask();
+    if (!editing) return;
+    if (!this.newTaskTitle().trim() || !this.newTaskDescription().trim() || !this.newTaskDueDate())
+      return;
+
+    const updatedTask: UpdateTask = {
+      id: editing.id,
+      title: this.newTaskTitle(),
+      description: this.newTaskDescription(),
+      dueDate: new Date(this.newTaskDueDate()),
+      priority: this.newTaskPriority(),
+    };
+    this.tasksService.updateTask(updatedTask).subscribe(() => {
+      this.reloadTasks();
+      this.closeTaskPopup();
     });
   }
 
@@ -174,14 +272,9 @@ export class Tasks implements OnInit {
     const task = event.previousContainer.data[event.previousIndex];
     const newStatus = event.container.id as TaskStatus;
 
-    this.tasks.update((tasks) => {
-      const filtered = tasks.filter((t) => t.id !== task.id);
-      const updatedTask = { ...task, status: newStatus };
-      const targetTasks = filtered.filter((t) => t.status === newStatus);
-      const insertIndex = filtered.indexOf(targetTasks[event.currentIndex]) + 1;
-      filtered.splice(insertIndex === 0 ? filtered.length : insertIndex - 1, 0, updatedTask);
-      return [...filtered];
-    });
+    this.tasks.update((tasks) =>
+      tasks.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t)),
+    );
 
     this.moveTask(task, newStatus);
   }

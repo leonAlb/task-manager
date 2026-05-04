@@ -1,5 +1,11 @@
 @import '@angular/cdk/overlay-prebuilt.css';
 
+.cdk-drag,
+.cdk-drag-preview,
+.cdk-drag-placeholder {
+  cursor: default !important;
+}
+
 // ─── Layout ───────────────────────────────────────────────────────
 .layout {
   display: grid;
@@ -117,6 +123,11 @@
       border-color: #4f7ef8;
     }
   }
+}
+
+.btn-create:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .admin-section {
@@ -262,9 +273,8 @@ button {
   padding: 12px;
   margin-bottom: 8px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: grab;
+  flex-direction: column;
+  cursor: move;
   transition:
     box-shadow 0.2s,
     opacity 0.2s;
@@ -280,17 +290,87 @@ button {
   &.cdk-drag-placeholder {
     opacity: 0.3;
   }
+}
 
-  span {
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 1.4;
-    color: var(--text-primary);
-    flex: 1;
+.task-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.task-title {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+.task-description {
+  font-size: 12px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-due {
+  font-size: 11px;
+  opacity: 0.5;
+  color: var(--text-primary);
+}
+
+.task-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.priority-badge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: capitalize;
+  padding: 2px 7px;
+  border-radius: 999px;
+  flex-shrink: 0;
+
+  &.priority-badge-low {
+    background: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+  }
+
+  &.priority-badge-medium {
+    background: rgba(234, 179, 8, 0.15);
+    color: #ca8a04;
+  }
+
+  &.priority-badge-high {
+    background: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
   }
 }
 
-.completed span {
+// Priority glows
+.priority-low {
+  box-shadow:
+    0 0 0 1px rgba(34, 197, 94, 0.25),
+    0 0 8px rgba(34, 197, 94, 0.12);
+}
+
+.priority-medium {
+  box-shadow:
+    0 0 0 1px rgba(234, 179, 8, 0.25),
+    0 0 8px rgba(234, 179, 8, 0.12);
+}
+
+.priority-high {
+  box-shadow:
+    0 0 0 1px rgba(239, 68, 68, 0.25),
+    0 0 8px rgba(239, 68, 68, 0.12);
+}
+
+.completed .task-title {
   text-decoration: line-through;
   opacity: 0.5;
 }
@@ -304,9 +384,34 @@ button {
   margin-right: 6px;
 }
 
+.edit-btn {
+  width: 28px !important;
+  height: 28px;
+  cursor: pointer;
+  min-width: unset;
+  flex-shrink: 0;
+  padding: 0;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  opacity: 0.4;
+  font-size: 14px;
+  margin-left: auto;
+  transition:
+    opacity 0.2s,
+    background 0.2s;
+
+  &:hover {
+    opacity: 1;
+    background-color: var(--border-color);
+  }
+}
+
 .delete-btn {
   width: 28px !important;
   height: 28px;
+  cursor: pointer;
   min-width: unset;
   flex-shrink: 0;
   padding: 0;
@@ -430,4 +535,72 @@ button {
   color: white;
   padding: 2px 8px;
   border-radius: 999px;
+}
+
+// ─── Create Task Form ─────────────────────────────────────────────
+.create-task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  input,
+  select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+
+    &:focus {
+      border-color: #4f7ef8;
+    }
+  }
+
+  .task-field {
+    width: 100%;
+  }
+
+  .mat-mdc-form-field {
+    width: 100%;
+  }
+
+  .mat-mdc-text-field-wrapper,
+  .mat-mdc-form-field-flex {
+    background-color: var(--bg-primary);
+  }
+
+  .mat-mdc-form-field-infix {
+    padding: 8px 12px;
+    min-height: 40px;
+  }
+
+  .mat-mdc-form-field-subscript-wrapper {
+    margin-top: 4px;
+  }
+}
+
+.popup-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+
+  button {
+    flex: 1;
+  }
+
+  .btn-create {
+    background-color: #4f7ef8;
+    border-color: #4f7ef8;
+    color: white;
+
+    &:hover {
+      background-color: #3b6de0;
+      opacity: 1;
+    }
+  }
 }

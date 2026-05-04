@@ -12,8 +12,8 @@ import {
 } from '@nestjs/common';
 import { TasksService } from '../service/tasks.service';
 import { AuthGuard } from '../../auth/guard/auth.guard';
+import type { RequestWithUser } from '../../auth/guard/auth.guard';
 import { AdminGuard } from '../../admin/guard/admin.guard';
-import type { Request } from 'express';
 import { CreateTaskDto } from '../dto/create-task.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
 
@@ -31,36 +31,36 @@ export class TasksController {
 
   // Get all tasks for the authenticated user
   @Get()
-  async getTasks(@Req() request: Request) {
+  async getTasks(@Req() request: RequestWithUser) {
     const userId = request.user.sub;
     return await this.tasksService.getTasks(userId);
   }
 
   // Create a new task for the authenticated user
   @Post()
-  async createTask(@Req() req: Request, @Body() body: CreateTaskDto) {
+  async createTask(@Req() req: RequestWithUser, @Body() body: CreateTaskDto) {
     const userId = req.user.sub;
-    return await this.tasksService.createTask(userId, body.title);
+    return await this.tasksService.createTask(userId, body);
   }
 
   // Update a task by ID for the authenticated user
   @Patch(':id')
   async updateTask(
-    @Req() request: Request,
+    @Req() request: RequestWithUser,
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateTaskDto,
   ) {
-    const userId = request.user.sub;
-    return await this.tasksService.updateTask(userId, id, body);
+    const { sub: userId, email } = request.user;
+    return await this.tasksService.updateTask(userId, id, body, email);
   }
 
   // Delete a task by ID for the authenticated user
   @Delete(':id')
   async deleteTask(
-    @Req() request: Request,
+    @Req() request: RequestWithUser,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    const userId = request.user.sub;
-    return await this.tasksService.deleteTask(userId, id);
+    const { sub: userId, email } = request.user;
+    return await this.tasksService.deleteTask(userId, id, email);
   }
 }

@@ -13,6 +13,12 @@ export enum TaskStatus {
   COMPLETED = 'completed',
 }
 
+export enum TaskPriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+}
+
 @Entity()
 export class Task {
   @PrimaryGeneratedColumn()
@@ -27,6 +33,19 @@ export class Task {
     default: TaskStatus.TODO,
   })
   status: TaskStatus;
+
+  @Column()
+  description: string;
+
+  @Column({ type: 'timestamp' })
+  dueDate: Date;
+
+  @Column({
+    type: 'enum',
+    enum: TaskPriority,
+    default: TaskPriority.MEDIUM,
+  })
+  priority: TaskPriority;
 
   @Column()
   userId: number;

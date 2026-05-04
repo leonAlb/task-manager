@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { User } from '../../auth/entities/user.entity';
 import { Task } from '../../tasks/entities/task.entity';
-import { TaskStatus } from '../../tasks/entities/task.entity';
+import { TaskPriority, TaskStatus } from '../../tasks/entities/task.entity';
 
 @Injectable()
 export class AdminService implements OnApplicationBootstrap {
@@ -55,6 +55,7 @@ export class AdminService implements OnApplicationBootstrap {
   }
 
   async seedData() {
+    const days = (n: number) => new Date(Date.now() + n * 86400000);
     const defaultPassword = await bcrypt.hash('qwertz', 10);
 
     const user1 = await this.findOrCreateUser(
@@ -91,16 +92,25 @@ export class AdminService implements OnApplicationBootstrap {
         this.tasksRepository.create([
           {
             title: 'Example Task 1',
+            description: 'This is an example task',
+            dueDate: days(7),
+            priority: TaskPriority.LOW,
             status: TaskStatus.TODO,
             userId: user1.id,
           },
           {
             title: 'Example Task 2',
+            description: 'This task is in progress',
+            dueDate: days(3),
+            priority: TaskPriority.MEDIUM,
             status: TaskStatus.IN_PROGRESS,
             userId: user1.id,
           },
           {
             title: 'Example Task 3',
+            description: 'This task is done',
+            dueDate: days(-2),
+            priority: TaskPriority.HIGH,
             status: TaskStatus.COMPLETED,
             userId: user1.id,
           },
@@ -111,10 +121,27 @@ export class AdminService implements OnApplicationBootstrap {
     if (user2Tasks === 0) {
       await this.tasksRepository.save(
         this.tasksRepository.create([
-          { title: 'Learn Angular', status: TaskStatus.TODO, userId: user2.id },
-          { title: 'Master NestJS', status: TaskStatus.TODO, userId: user2.id },
+          {
+            title: 'Learn Angular',
+            description: 'Study Angular signals and components',
+            dueDate: days(5),
+            priority: TaskPriority.HIGH,
+            status: TaskStatus.TODO,
+            userId: user2.id,
+          },
+          {
+            title: 'Master NestJS',
+            description: 'Build a REST API with NestJS',
+            dueDate: days(14),
+            priority: TaskPriority.MEDIUM,
+            status: TaskStatus.TODO,
+            userId: user2.id,
+          },
           {
             title: 'Build fullstack app',
+            description: 'Combine Angular and NestJS into one project',
+            dueDate: days(30),
+            priority: TaskPriority.LOW,
             status: TaskStatus.TODO,
             userId: user2.id,
           },
@@ -125,14 +152,27 @@ export class AdminService implements OnApplicationBootstrap {
     if (user3Tasks === 0) {
       await this.tasksRepository.save(
         this.tasksRepository.create([
-          { title: 'Write tests', status: TaskStatus.TODO, userId: user3.id },
+          {
+            title: 'Write tests',
+            description: 'Add unit and integration tests',
+            dueDate: days(2),
+            priority: TaskPriority.HIGH,
+            status: TaskStatus.TODO,
+            userId: user3.id,
+          },
           {
             title: 'Refactor code',
+            description: 'Clean up service layer',
+            dueDate: days(10),
+            priority: TaskPriority.MEDIUM,
             status: TaskStatus.IN_PROGRESS,
             userId: user3.id,
           },
           {
             title: 'Update README',
+            description: 'Document setup and usage',
+            dueDate: days(6),
+            priority: TaskPriority.LOW,
             status: TaskStatus.IN_PROGRESS,
             userId: user3.id,
           },

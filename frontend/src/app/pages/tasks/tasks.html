@@ -23,13 +23,7 @@
     @if (!sidebarCollapsed()) {
       <div class="sidebar-content">
         <div class="create-task">
-          <input
-            [value]="newTaskTitle()"
-            (input)="newTaskTitle.set($any($event.target).value)"
-            (keyup.enter)="createTask()"
-            placeholder="New task title"
-          />
-          <button (click)="createTask()">Add Task</button>
+          <button (click)="openCreatePopup()">Add Task</button>
         </div>
 
         @if (currentUser()?.isAdmin) {
@@ -66,8 +60,8 @@
 
   <!-- USER POPUP -->
   @if (showUserPopup()) {
-    <div class="popup-overlay" (click)="toggleUserPopup()">
-      <div class="user-popup" (click)="$event.stopPropagation()">
+    <div class="popup-overlay" (click)="closeIfOverlay($event, 'user')">
+      <div class="user-popup" (mousedown)="$event.stopPropagation()">
         <div class="popup-header">
           <h3>Manage Users</h3>
           <button (click)="toggleUserPopup()">&times;</button>
@@ -92,64 +86,95 @@
     </div>
   }
 
+  <!-- TASK POPUP (create & edit) -->
+  @if (showTaskPopup()) {
+    <div class="popup-overlay" (click)="closeIfOverlay($event, 'task')">
+      <div class="user-popup" (mousedown)="$event.stopPropagation()">
+        <div class="popup-header">
+          <h3>{{ taskPopupMode() === 'create' ? 'Create Task' : 'Edit Task' }}</h3>
+          <button (click)="closeTaskPopup()">&times;</button>
+        </div>
+        <div class="create-task-form">
+          <input
+            placeholder="Title"
+            [value]="newTaskTitle()"
+            (input)="newTaskTitle.set($any($event.target).value)"
+          />
+          <input
+            placeholder="Description"
+            [value]="newTaskDescription()"
+            (input)="newTaskDescription.set($any($event.target).value)"
+          />
+          <input
+            type="datetime-local"
+            [value]="newTaskDueDate()"
+            (change)="newTaskDueDate.set($any($event.target).value)"
+          />
+          <select
+            [value]="newTaskPriority()"
+            (change)="newTaskPriority.set($any($event.target).value)"
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+          <div class="popup-actions">
+            <button (click)="closeTaskPopup()">Cancel</button>
+            <button
+              class="btn-create"
+              [disabled]="!isTaskFormValid()"
+              (click)="taskPopupMode() === 'create' ? createTask() : saveTask()"
+            >
+              {{ taskPopupMode() === 'create' ? 'Create Task' : 'Save Changes' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
   <!-- KANBAN COLUMNS -->
-  <div
-    class="column todo-column"
-    cdkDropList
-    id="todo"
-    [cdkDropListData]="todoTasks()"
-    [cdkDropListConnectedTo]="['in_progress', 'completed']"
-    (cdkDropListDropped)="onDrop($event)"
-  >
-    <h2 class="column-header">To Do <span class="task-count">{{ todoTasks().length }}</span></h2>
-    @for (task of todoTasks(); track task.id) {
-      <div class="task-card" cdkDrag>
-        <span>{{ task.title }}</span>
-        @if (showAllTasksView()) {
-          <span class="task-owner">{{ getUserName(task.userId) }}</span>
-        }
-        <button class="delete-btn" (click)="deleteTask(task.id)">×</button>
-      </div>
-    }
-  </div>
+  @for (column of columns; track column.id) {
+    <div
+      class="column {{ column.class }}"
+      cdkDropList
+      [id]="column.id"
+      [cdkDropListData]="column.tasks()"
+      [cdkDropListConnectedTo]="getConnectedLists(column.id)"
+      (cdkDropListDropped)="onDrop($event)"
+    >
+      <h2 class="column-header">
+        {{ column.title }}
+        <span class="task-count">{{ column.tasks().length }}</span>
+      </h2>
 
-  <div
-    class="column in-progress-column"
-    cdkDropList
-    id="in_progress"
-    [cdkDropListData]="inProgressTasks()"
-    [cdkDropListConnectedTo]="['todo', 'completed']"
-    (cdkDropListDropped)="onDrop($event)"
-  >
-    <h2 class="column-header">In Progress <span class="task-count">{{ inProgressTasks().length }}</span></h2>
-    @for (task of inProgressTasks(); track task.id) {
-      <div class="task-card" cdkDrag>
-        <span>{{ task.title }}</span>
-        @if (showAllTasksView()) {
-          <span class="task-owner">{{ getUserName(task.userId) }}</span>
-        }
-        <button class="delete-btn" (click)="deleteTask(task.id)">×</button>
-      </div>
-    }
-  </div>
+      @for (task of column.tasks(); track task.id) {
+        <div
+          class="task-card"
+          [class.completed]="task.status === TaskStatus.COMPLETED"
+          [ngClass]="'priority-' + task.priority"
+          cdkDrag
+        >
+          <div class="task-body">
+            <span class="task-title">{{ task.title }}</span>
+            <span class="task-description">{{ task.description }}</span>
+            <span class="task-due">{{ task.dueDate | date: 'dd/MM/yyyy HH:mm' }}</span>
+          </div>
 
-  <div
-    class="column completed-column"
-    cdkDropList
-    id="completed"
-    [cdkDropListData]="completedTasks()"
-    [cdkDropListConnectedTo]="['todo', 'in_progress']"
-    (cdkDropListDropped)="onDrop($event)"
-  >
-    <h2 class="column-header">Completed <span class="task-count">{{ completedTasks().length }}</span></h2>
-    @for (task of completedTasks(); track task.id) {
-      <div class="task-card completed" cdkDrag>
-        <span>{{ task.title }}</span>
-        @if (showAllTasksView()) {
-          <span class="task-owner">{{ getUserName(task.userId) }}</span>
-        }
-        <button class="delete-btn" (click)="deleteTask(task.id)">×</button>
-      </div>
-    }
-  </div>
+          <div class="task-footer">
+            <span [class]="'priority-badge priority-badge-' + task.priority">
+              {{ task.priority }}
+            </span>
+
+            @if (showAllTasksView()) {
+              <span class="task-owner">{{ getUserName(task.userId) }}</span>
+            }
+
+            <button class="edit-btn" (click)="openEditPopup(task)">✎</button>
+            <button class="delete-btn" (click)="deleteTask(task.id)">×</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
 </div>
