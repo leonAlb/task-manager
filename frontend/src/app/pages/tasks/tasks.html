@@ -134,47 +134,51 @@
   }
 
   <!-- KANBAN COLUMNS -->
-  @for (column of columns; track column.id) {
-    <div
-      class="column {{ column.class }}"
-      cdkDropList
-      [id]="column.id"
-      [cdkDropListData]="column.tasks()"
-      [cdkDropListConnectedTo]="getConnectedLists(column.id)"
-      (cdkDropListDropped)="onDrop($event)"
-    >
-      <h2 class="column-header">
-        {{ column.title }}
-        <span class="task-count">{{ column.tasks().length }}</span>
-      </h2>
+  <section class="board">
+    @for (column of columns; track column.id) {
+      <div
+        class="column {{ column.class }}"
+        cdkDropList
+        [id]="column.id"
+        [cdkDropListData]="column.tasks()"
+        [cdkDropListConnectedTo]="getConnectedLists(column.id)"
+        (cdkDropListDropped)="onDrop($event)"
+      >
+        <h2 class="column-header">
+          {{ column.title }}
+          <span class="task-count">{{ column.tasks().length }}</span>
+        </h2>
 
-      @for (task of column.tasks(); track task.id) {
-        <div
-          class="task-card"
-          [class.completed]="task.status === TaskStatus.COMPLETED"
-          [ngClass]="'priority-' + task.priority"
-          cdkDrag
-        >
-          <div class="task-body">
-            <span class="task-title">{{ task.title }}</span>
-            <span class="task-description">{{ task.description }}</span>
-            <span class="task-due">{{ task.dueDate | date: 'dd/MM/yyyy HH:mm' }}</span>
-          </div>
+        <div class="task-list">
+          @for (task of column.tasks(); track task.id) {
+            <div
+              class="task-card"
+              [class.completed]="task.status === TaskStatus.COMPLETED"
+              [ngClass]="'priority-' + task.priority"
+              cdkDrag
+            >
+              <div class="task-body">
+                <span class="task-title">{{ task.title }}</span>
+                <span class="task-description">{{ task.description }}</span>
+                <span class="task-due">{{ task.dueDate | date: 'dd/MM/yyyy HH:mm' }}</span>
+              </div>
 
-          <div class="task-footer">
-            <span [class]="'priority-badge priority-badge-' + task.priority">
-              {{ task.priority }}
-            </span>
+              <div class="task-footer">
+                <span [class]="'priority-badge priority-badge-' + task.priority">
+                  {{ task.priority }}
+                </span>
 
-            @if (showAllTasksView()) {
-              <span class="task-owner">{{ getUserName(task.userId) }}</span>
-            }
+                @if (showAllTasksView()) {
+                  <span class="task-owner">{{ getUserName(task.userId) }}</span>
+                }
 
-            <button class="edit-btn" (click)="openEditPopup(task)">✎</button>
-            <button class="delete-btn" (click)="deleteTask(task.id)">×</button>
-          </div>
+                <button class="edit-btn" (click)="openEditPopup(task)">✎</button>
+                <button class="delete-btn" (click)="deleteTask(task.id)">×</button>
+              </div>
+            </div>
+          }
         </div>
-      }
-    </div>
-  }
+      </div>
+    }
+  </section>
 </div>
