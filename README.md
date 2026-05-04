@@ -21,7 +21,6 @@ It's a Kanban-style task board where users manage their own tasks across three c
 
 ## Planned
 
-- Drag-and-drop reordering within a column
 - Project Manager role — assign tasks to users, view team boards
 - Multiple boards per user
 - Real-time updates via WebSockets
