@@ -5,7 +5,13 @@ import { TasksService } from '../../services/tasks';
 import { AuthService } from '../../services/auth';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
+import {
+  CdkDrag,
+  CdkDragDrop,
+  CdkDropList,
+  moveItemInArray,
+  transferArrayItem,
+} from '@angular/cdk/drag-drop';
 import { AdminService } from '../../services/admin';
 import { ThemeService } from '../../services/theme';
 
@@ -179,21 +185,6 @@ export class Tasks implements OnInit {
     });
   }
 
-  moveTask(task: Task, newStatus: TaskStatus) {
-    const previousTasks = this.tasks();
-
-    this.tasks.update((tasks) =>
-      tasks.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t)),
-    );
-
-    const updatedTask = { ...task, status: newStatus };
-    this.tasksService.updateTask(updatedTask).subscribe({
-      error: () => {
-        this.tasks.set(previousTasks);
-      },
-    });
-  }
-
   // --------------------------------------------------------------
   // AdminStuff
   // --------------------------------------------------------------
@@ -267,15 +258,15 @@ export class Tasks implements OnInit {
   // Drag & Drop
   // --------------------------------------------------------------
   onDrop(event: CdkDragDrop<Task[]>) {
-    if (event.previousContainer === event.container) return;
-
-    const task = event.previousContainer.data[event.previousIndex];
-    const newStatus = event.container.id as TaskStatus;
-
-    this.tasks.update((tasks) =>
-      tasks.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t)),
-    );
-
-    this.moveTask(task, newStatus);
+    if (event.previousContainer === event.container) {
+      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+    } else {
+      transferArrayItem(
+        event.previousContainer.data,
+        event.container.data,
+        event.previousIndex,
+        event.currentIndex,
+      );
+    }
   }
 }
