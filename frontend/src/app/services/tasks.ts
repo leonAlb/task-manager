@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { CreateTask, Task, UpdateTask } from '../models/tasks.models';
+import { CreateTask, ReorderTaskItem, Task, UpdateTask } from '../models/tasks.models';
 import { User } from '../models/auth.models';
 
 @Injectable({
@@ -25,6 +25,10 @@ export class TasksService {
 
   updateTask({ id, ...body }: UpdateTask) {
     return this.http.patch<Task>(`${this.apiUrl}/${id}`, body);
+  }
+
+  reorderTasks(items: ReorderTaskItem[]) {
+    return this.http.patch<Task[]>(`${this.apiUrl}/reorder`, { items });
   }
 
   deleteTask(id: number) {

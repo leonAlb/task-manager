@@ -16,6 +16,7 @@ import type { RequestWithUser } from '../../auth/guard/auth.guard';
 import { AdminGuard } from '../../admin/guard/admin.guard';
 import { CreateTaskDto } from '../dto/create-task.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
+import { ReorderTasksDto } from '../dto/reorder-tasks.dto';
 
 @Controller('tasks')
 @UseGuards(AuthGuard)
@@ -41,6 +42,16 @@ export class TasksController {
   async createTask(@Req() req: RequestWithUser, @Body() body: CreateTaskDto) {
     const userId = req.user.sub;
     return await this.tasksService.createTask(userId, body);
+  }
+
+  // Reorder tasks (batch update)
+  @Patch('reorder')
+  async reorderTasks(
+    @Req() request: RequestWithUser,
+    @Body() body: ReorderTasksDto,
+  ) {
+    const { sub: userId, email } = request.user;
+    return await this.tasksService.reorderTasks(userId, body, email);
   }
 
   // Update a task by ID for the authenticated user

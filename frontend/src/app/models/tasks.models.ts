@@ -17,6 +17,7 @@ export interface UpdateTask {
   dueDate?: Date;
   priority?: TaskPriority;
   status?: TaskStatus;
+  order?: number;
 }
 
 export interface CreateTask {
@@ -36,4 +37,11 @@ export interface Task {
   priority: TaskPriority;
   status: TaskStatus;
   userId: number;
+  order: number;
+}
+
+export interface ReorderTaskItem {
+  id: number;
+  order: number;
+  status?: TaskStatus;
 }

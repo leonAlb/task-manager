@@ -24,6 +24,9 @@ export class Task {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ default: 0 })
+  order: number;
+
   @Column()
   title: string;
 

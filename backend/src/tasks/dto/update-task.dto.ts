@@ -1,4 +1,12 @@
-import { IsOptional, IsString, IsEnum, IsDate } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsEnum,
+  IsDate,
+  IsInt,
+  IsDefined,
+  ValidateIf,
+} from 'class-validator';
 import { TaskPriority, TaskStatus } from '../entities/task.entity';
 import { Type } from 'class-transformer';
 
@@ -23,4 +31,9 @@ export class UpdateTaskDto {
   @IsOptional()
   @IsEnum(TaskPriority)
   priority?: TaskPriority;
+
+  @ValidateIf((dto: UpdateTaskDto) => dto.status !== undefined)
+  @IsDefined()
+  @IsInt()
+  order?: number;
 }

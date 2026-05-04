@@ -1,5 +1,12 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { CreateTask, Task, TaskPriority, TaskStatus, UpdateTask } from '../../models/tasks.models';
+import {
+  CreateTask,
+  ReorderTaskItem,
+  Task,
+  TaskPriority,
+  TaskStatus,
+  UpdateTask,
+} from '../../models/tasks.models';
 import { User } from '../../models/auth.models';
 import { TasksService } from '../../services/tasks';
 import { AuthService } from '../../services/auth';
@@ -28,9 +35,15 @@ export class Tasks implements OnInit {
 
   // Task related
   tasks = signal<Task[]>([]);
-  todoTasks = computed(() => this.tasks().filter((t) => t.status === TaskStatus.TODO));
-  inProgressTasks = computed(() => this.tasks().filter((t) => t.status === TaskStatus.IN_PROGRESS));
-  completedTasks = computed(() => this.tasks().filter((t) => t.status === TaskStatus.COMPLETED));
+  todoTasks = computed(() =>
+    this.sortByOrder(this.tasks().filter((t) => t.status === TaskStatus.TODO)),
+  );
+  inProgressTasks = computed(() =>
+    this.sortByOrder(this.tasks().filter((t) => t.status === TaskStatus.IN_PROGRESS)),
+  );
+  completedTasks = computed(() =>
+    this.sortByOrder(this.tasks().filter((t) => t.status === TaskStatus.COMPLETED)),
+  );
 
   // User related
   currentUser = computed(() => this.authService.currentUser());
@@ -67,6 +80,10 @@ export class Tasks implements OnInit {
 
   getConnectedLists(currentId: string): string[] {
     return ['todo', 'in_progress', 'completed'].filter((id) => id !== currentId);
+  }
+
+  private sortByOrder(tasks: Task[]) {
+    return [...tasks].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id);
   }
 
   // Task form
@@ -258,7 +275,13 @@ export class Tasks implements OnInit {
   // Drag & Drop
   // --------------------------------------------------------------
   onDrop(event: CdkDragDrop<Task[]>) {
-    if (event.previousContainer === event.container) {
+    const tasksBeforeChange = this.tasks();
+    const sameContainer = event.previousContainer === event.container;
+
+    if (sameContainer) {
+      if (event.previousIndex === event.currentIndex) {
+        return;
+      }
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
       transferArrayItem(
@@ -268,5 +291,74 @@ export class Tasks implements OnInit {
         event.currentIndex,
       );
     }
+
+    const targetStatus = event.container.id as TaskStatus;
+    const targetItems = this.buildReorderUpdates(event.container.data, targetStatus);
+    const items = sameContainer
+      ? targetItems
+      : [
+          ...targetItems,
+          ...this.buildReorderUpdates(
+            event.previousContainer.data,
+            event.previousContainer.id as TaskStatus,
+          ),
+        ];
+
+    const changedItems = this.filterReorderChanges(items, tasksBeforeChange);
+
+    this.applyReorder(changedItems);
+
+    if (!changedItems.length) {
+      return;
+    }
+
+    this.tasksService.reorderTasks(changedItems).subscribe({
+      error: () => {
+        this.tasks.set(tasksBeforeChange);
+      },
+    });
+  }
+
+  private buildReorderUpdates(tasks: Task[], status: TaskStatus): ReorderTaskItem[] {
+    return tasks.map((task, index) => ({
+      id: task.id,
+      order: index,
+      status,
+    }));
+  }
+
+  private applyReorder(items: ReorderTaskItem[]) {
+    const updatesById = new Map(items.map((item) => [item.id, item]));
+
+    this.tasks.update((tasks) =>
+      tasks.map((task) => {
+        const update = updatesById.get(task.id);
+        if (!update) return task;
+
+        const nextStatus = update.status ?? task.status;
+        const nextOrder = update.order ?? task.order;
+        if (task.order === nextOrder && task.status === nextStatus) return task;
+
+        return {
+          ...task,
+          order: nextOrder,
+          status: nextStatus,
+        };
+      }),
+    );
+  }
+
+  private filterReorderChanges(items: ReorderTaskItem[], previousTasks: Task[]) {
+    const previousById = new Map(previousTasks.map((task) => [task.id, task]));
+
+    return items.filter((item) => {
+      const previous = previousById.get(item.id);
+      if (!previous) return true;
+
+      const nextStatus = item.status ?? previous.status;
+      const nextOrder = item.order ?? previous.order;
+
+      return previous.status !== nextStatus || previous.order !== nextOrder;
+    });
   }
 }
