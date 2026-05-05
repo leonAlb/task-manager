@@ -11,7 +11,8 @@ import * as bcrypt from 'bcrypt';
 import { User, Role } from '../../auth/entities/user.entity';
 import { Task } from '../../tasks/entities/task.entity';
 import { TaskPriority, TaskStatus } from '../../tasks/entities/task.entity';
-import { Team } from '../../auth/entities/team.entity';
+import { Team } from '../../teams/entities/team.entity';
+import { TeamsService } from '../../teams/service/teams.service';
 
 @Injectable()
 export class AdminService implements OnApplicationBootstrap {
@@ -22,6 +23,7 @@ export class AdminService implements OnApplicationBootstrap {
     private tasksRepository: Repository<Task>,
     @InjectRepository(Team)
     private teamsRepository: Repository<Team>,
+    private teamsService: TeamsService,
     private configService: ConfigService,
   ) {}
 
@@ -33,12 +35,19 @@ export class AdminService implements OnApplicationBootstrap {
       console.warn('Admin credentials not set. Skipping seeding.');
       return;
     }
+
     // Check if admin user already exists
     const existingAdmin = await this.usersRepository.findOne({
       where: { email: adminEmail },
     });
-    if (existingAdmin) {
-      console.log('Admin user already exists. Skipping seeding.');
+    if (existingAdmin && existingAdmin.role === Role.ADMIN) {
+      return;
+    } else if (existingAdmin) {
+      console.warn(
+        `User with email ${adminEmail} already exists but is not an admin.`,
+      );
+      existingAdmin.role = Role.ADMIN;
+      await this.usersRepository.save(existingAdmin);
       return;
     }
 
@@ -248,38 +257,11 @@ export class AdminService implements OnApplicationBootstrap {
   }
 
   async getAllTeams() {
-    return this.teamsRepository.find({
-      relations: ['manager', 'members'],
-    });
+    return this.teamsService.getAllTeams();
   }
 
-  async getTeamDetail(teamId: number) {
-    const team = await this.teamsRepository.findOne({
-      where: { id: teamId },
-      relations: ['manager', 'members', 'members.tasks'],
-    });
-
-    if (!team) {
-      throw new NotFoundException('Team not found');
-    }
-
-    return {
-      id: team.id,
-      name: team.name,
-      manager: {
-        id: team.manager.id,
-        firstName: team.manager.firstName,
-        lastName: team.manager.lastName,
-      },
-      members: team.members.map((member) => ({
-        user: {
-          id: member.id,
-          firstName: member.firstName,
-          lastName: member.lastName,
-        },
-        tasks: member.tasks,
-      })),
-    };
+  async getTeamDetail(id: number) {
+    return this.teamsService.getTeamDetail(id);
   }
 
   private async findOrCreateUser(

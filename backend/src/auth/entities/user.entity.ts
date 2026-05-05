@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 import { RefreshToken } from './refresh-token.entity';
 import { Task } from '../../tasks/entities/task.entity';
-import { Team } from './team.entity';
+import { Team } from '../../teams/entities/team.entity';
 
 export enum Role {
   USER = 'user',

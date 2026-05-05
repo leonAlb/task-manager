@@ -11,7 +11,9 @@
             <span class="user-name"
               >{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</span
             >
-            <span class="user-role">{{ currentUser()?.role === Role.ADMIN ? 'Admin' : 'User' }}</span>
+            <span class="user-role">{{
+              currentUser()?.role === Role.ADMIN ? 'Admin' : 'User'
+            }}</span>
           </div>
         }
       </div>
@@ -30,9 +32,6 @@
           <div class="admin-section">
             <span class="section-label">Admin</span>
             <button class="btn-admin" (click)="seedData()">Seed Data</button>
-            <button class="btn-admin" (click)="toggleAllTasksView()">
-              {{ showAllTasksView() ? 'My Tasks' : 'All Tasks' }}
-            </button>
             <button class="btn-admin" (click)="deleteAllTasks()">Delete All Tasks</button>
             <button class="btn-danger" (click)="deleteAllData()">Delete All Data</button>
             <button class="btn-admin" (click)="toggleUserPopup()">Manage Users</button>
@@ -168,7 +167,7 @@
                   {{ task.priority }}
                 </span>
 
-                @if (showAllTasksView()) {
+                @if (showOwnerNames()) {
                   <span class="task-owner">{{ getUserName(task.userId) }}</span>
                 }
 

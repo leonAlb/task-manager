@@ -48,6 +48,10 @@ export class Tasks implements OnInit {
   // User related
   currentUser = computed(() => this.authService.currentUser());
   users = signal<User[]>([]);
+  showOwnerNames = computed(() => {
+    const role = this.currentUser()?.role;
+    return role === Role.ADMIN || role === Role.PROJECT_MANAGER;
+  });
 
   // UI related
   showUserPopup = signal(false);
@@ -55,7 +59,6 @@ export class Tasks implements OnInit {
   taskPopupMode = signal<'create' | 'edit'>('create');
   editingTask = signal<Task | null>(null);
   sidebarCollapsed = signal(false);
-  showAllTasksView = signal(localStorage.getItem('showAllTasksView') === 'true');
 
   columns = [
     {
@@ -157,7 +160,26 @@ export class Tasks implements OnInit {
   // Task Management
   // --------------------------------------------------------------
   ngOnInit() {
-    this.reloadTasks();
+    const profile = this.currentUser();
+
+    if (profile) {
+      this.reloadTasks();
+      return;
+    }
+
+    if (this.authService.isLoggedIn()) {
+      this.authService.getMe().subscribe({
+        next: (user) => {
+          this.authService.currentUser.set(user);
+          this.reloadTasks();
+        },
+        error: () => {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+        },
+      });
+      return;
+    }
   }
 
   createTask() {
@@ -207,13 +229,6 @@ export class Tasks implements OnInit {
   // AdminStuff
   // --------------------------------------------------------------
 
-  toggleAllTasksView() {
-    this.showAllTasksView.update((v) => !v);
-    localStorage.setItem('showAllTasksView', String(this.showAllTasksView()));
-    if (!this.showAllTasksView()) this.users.set([]);
-    this.reloadTasks();
-  }
-
   getUserName(userId: number): string {
     const user = this.users().find((u) => u.id === userId);
     return user ? `${user.firstName} ${user.lastName}` : '';
@@ -227,14 +242,18 @@ export class Tasks implements OnInit {
   }
 
   private reloadTasks() {
-    if (this.showAllTasksView()) {
+    const role = this.currentUser()?.role;
+
+    if (role === Role.ADMIN) {
       this.tasksService.getUsers().subscribe((users) => {
         this.users.set(users);
         this.tasks.set(users.flatMap((u) => u.tasks));
       });
-    } else {
-      this.tasksService.getTasks().subscribe((tasks) => this.tasks.set(tasks));
+      return;
     }
+
+    this.users.set([]);
+    this.tasksService.getTasks().subscribe((tasks) => this.tasks.set(tasks));
   }
 
   seedData() {

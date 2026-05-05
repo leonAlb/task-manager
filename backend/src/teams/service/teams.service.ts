@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Team } from '../../auth/entities/team.entity';
+import { Team } from '../entities/team.entity';
 import { User } from '../../auth/entities/user.entity';
 
 @Injectable()
@@ -60,5 +60,43 @@ export class TeamsService {
       },
       tasks: member.tasks,
     }));
+  }
+
+  async getAllTeams(): Promise<Team[]> {
+    return this.teamsRepository.find({
+      relations: ['manager', 'members'],
+    });
+  }
+
+  async getTeamDetail(teamId: number) {
+    const team: Team | null = await this.teamsRepository.findOne({
+      where: { id: teamId },
+      relations: ['manager', 'members', 'members.tasks'],
+    });
+
+    if (!team) {
+      throw new NotFoundException('Team not found');
+    }
+
+    const manager: User = team.manager;
+    const members: User[] = team.members;
+
+    return {
+      id: team.id,
+      name: team.name,
+      manager: {
+        id: manager.id,
+        firstName: manager.firstName,
+        lastName: manager.lastName,
+      },
+      members: members.map((member: User) => ({
+        user: {
+          id: member.id,
+          firstName: member.firstName,
+          lastName: member.lastName,
+        },
+        tasks: member.tasks,
+      })),
+    };
   }
 }

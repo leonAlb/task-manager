@@ -55,7 +55,7 @@ export class AuthService {
     lastName: string,
     email: string,
     password: string,
-  ): Promise<Omit<User, 'password' | 'refreshTokens'>> {
+  ): Promise<Omit<User, 'password' | 'refreshTokens' | 'teams'>> {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
@@ -81,7 +81,6 @@ export class AuthService {
         email: newUser.email,
         role: newUser.role,
         tasks: newUser.tasks,
-        teams: newUser.teams,
       };
     }
   }
