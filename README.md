@@ -8,16 +8,24 @@ It's a Kanban-style task board where users manage their own tasks across three c
 
 **For everyone**
 
-- Register an account and log in with JWT authentication (access + refresh tokens)
-- Create and delete tasks
-- Drag and drop tasks
+- Authentication: Register an account and log in with JWT authentication, featuring secure access and refresh tokens.
+- Task Management: Create and delete your own personal tasks.
+- Organization: Drag and drop tasks across columns to manage your workflow.
+
+**For project managers**
+
+- Team Creation: Initiate and manage new project teams.
+- Member Management: Assign and remove users from your specific teams.
+- Full Oversight: See, Edit, Move, and Delete all tasks belonging to your teams.
+- Task Delegation: Directly assign tasks to team members.
 
 **For admins**
 
-- Toggle between your own tasks and a view of all users' tasks
-- Seed example users and tasks to populate the board
-- Manage users
-- Delete all tasks or wipe all data
+- User Management: Comprehensive control over all user accounts.
+- Role Promotion: Elevate standard users to the Project Manager role.
+- Global Visibility: Master view of all tasks across the entire platform.
+- Development Tools: Seed example users and tasks to quickly populate the board for testing.
+- System Hard Reset: Capability to delete all tasks or wipe the entire database.
 
 ## Requirements
 

@@ -215,6 +215,14 @@ export class Tasks implements OnInit {
     this.loadAvailableMembers(teamId);
   }
 
+  openRemoveMembersPopup() {
+    const teamId = this.selectedTeamId();
+    if (!teamId) return;
+    this.showTeamPopup.set(false);
+    this.showMembersPopup.set(true);
+    this.loadAvailableMembers(teamId);
+  }
+
   closeMembersPopup() {
     this.showMembersPopup.set(false);
   }
@@ -311,6 +319,10 @@ export class Tasks implements OnInit {
     });
   }
 
+  // ----------------------------------------------
+  // Project Manager Team Management
+  // ----------------------------------------------
+
   deleteTask(id: number) {
     this.tasksService.deleteTask(id).subscribe(() => {
       this.tasks.update((tasks) => tasks.filter((t) => t.id !== id));
@@ -367,6 +379,49 @@ export class Tasks implements OnInit {
     });
   }
 
+  removeMember(userId: number) {
+    const teamId = this.selectedTeamId();
+    if (!teamId) return;
+
+    this.teamsService.removeMember(teamId, userId).subscribe(() => {
+      this.loadTeamTasks(teamId);
+      this.loadAvailableMembers(teamId);
+      this.loadManagedTeams();
+    });
+  }
+
+  private loadManagedTeams() {
+    this.teamsService.getManagedTeams().subscribe((teams) => {
+      this.teams.set(teams);
+
+      if (!teams.length) {
+        this.selectedTeamId.set(null);
+        this.users.set([]);
+        this.tasks.set([]);
+        return;
+      }
+
+      const current = this.selectedTeamId();
+      const next = current && teams.some((team) => team.id === current) ? current : teams[0].id;
+
+      this.selectedTeamId.set(next);
+      this.loadTeamTasks(next);
+    });
+  }
+
+  private loadTeamTasks(teamId: number) {
+    this.teamsService.getTeamTasks(teamId).subscribe((members) => {
+      this.users.set(members);
+      this.tasks.set(members.flatMap((member) => member.tasks));
+    });
+  }
+
+  private loadAvailableMembers(teamId: number) {
+    this.teamsService.getAvailableMembers(teamId).subscribe((members) => {
+      this.availableUsers.set(members);
+    });
+  }
+
   // --------------------------------------------------------------
   // AdminStuff
   // --------------------------------------------------------------
@@ -409,38 +464,6 @@ export class Tasks implements OnInit {
 
     this.users.set([]);
     this.tasksService.getTasks().subscribe((tasks) => this.tasks.set(tasks));
-  }
-
-  private loadManagedTeams() {
-    this.teamsService.getManagedTeams().subscribe((teams) => {
-      this.teams.set(teams);
-
-      if (!teams.length) {
-        this.selectedTeamId.set(null);
-        this.users.set([]);
-        this.tasks.set([]);
-        return;
-      }
-
-      const current = this.selectedTeamId();
-      const next = current && teams.some((team) => team.id === current) ? current : teams[0].id;
-
-      this.selectedTeamId.set(next);
-      this.loadTeamTasks(next);
-    });
-  }
-
-  private loadTeamTasks(teamId: number) {
-    this.teamsService.getTeamTasks(teamId).subscribe((members) => {
-      this.users.set(members);
-      this.tasks.set(members.flatMap((member) => member.tasks));
-    });
-  }
-
-  private loadAvailableMembers(teamId: number) {
-    this.teamsService.getAvailableMembers(teamId).subscribe((members) => {
-      this.availableUsers.set(members);
-    });
   }
 
   seedData() {

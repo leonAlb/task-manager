@@ -46,6 +46,24 @@ export class TeamsService {
     return this.teamsRepository.save(team);
   }
 
+  async removeMember(
+    teamId: number,
+    managerId: number,
+    userId: number,
+  ): Promise<Team> {
+    const team = await this.teamsRepository.findOne({
+      where: { id: teamId, managerId },
+      relations: ['members'],
+    });
+
+    if (!team) {
+      throw new NotFoundException('Team not found');
+    }
+
+    team.members = team.members.filter((member) => member.id !== userId);
+    return this.teamsRepository.save(team);
+  }
+
   async getAvailableMembers(teamId: number, managerId: number) {
     const team = await this.teamsRepository.findOne({
       where: { id: teamId, managerId },

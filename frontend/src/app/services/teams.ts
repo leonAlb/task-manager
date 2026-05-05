@@ -29,4 +29,8 @@ export class TeamsService {
   addMember(teamId: number, userId: number) {
     return this.http.post(`${this.apiUrl}/${teamId}/members`, { userId });
   }
+
+  removeMember(teamId: number, userId: number) {
+    return this.http.delete(`${this.apiUrl}/${teamId}/members/${userId}`);
+  }
 }

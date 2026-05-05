@@ -175,7 +175,7 @@
         <div class="popup-footer">
           <button class="btn-secondary" (click)="closeManageTeamsPopup()">Close</button>
           <button class="btn-secondary" [disabled]="!selectedTeamId()" (click)="openMembersPopup()">
-            Add Members
+            Manage Members
           </button>
           <button class="btn-primary" [disabled]="!selectedTeamId()" (click)="openDelegatePopup()">
             Delegate Task
@@ -185,26 +185,62 @@
     </div>
   }
 
-  <!-- ADD MEMBERS POPUP -->
+  <!-- TEAM MEMBERS POPUP -->
   @if (showMembersPopup()) {
     <div class="popup-overlay" (click)="closeIfOverlay($event, 'members')">
-      <div class="user-popup" (mousedown)="$event.stopPropagation()">
+      <div class="user-popup manage-members-popup" (mousedown)="$event.stopPropagation()">
+        <!-- HEADER: Fixed padding and alignment -->
         <div class="popup-header">
-          <h3>Add Team Members</h3>
-          <button (click)="closeMembersPopup()">&times;</button>
+          <h3>Team Members</h3>
+          <button class="close-btn" (click)="closeMembersPopup()">&times;</button>
         </div>
-        <ul>
-          @for (user of availableUsers(); track user.id) {
-            <li>
-              <span class="user-fullname">{{ user.firstName }} {{ user.lastName }}</span>
-              <span class="user-email">{{ user.email }}</span>
-              <button class="btn-admin" (click)="addMember(user.id)">Add</button>
-            </li>
-          }
-          @if (availableUsers().length === 0) {
-            <li>No users available.</li>
-          }
-        </ul>
+
+        <!-- SCROLL AREA: Isolated scrolling for long lists -->
+        <div class="members-scroll-area">
+          <!-- SECTION: CURRENT MEMBERS -->
+          <div class="member-section">
+            <h4>Current Members ({{ users().length }})</h4>
+            <ul>
+              @for (member of users(); track member.id) {
+                <li>
+                  <span class="user-fullname">{{ member.firstName }} {{ member.lastName }}</span>
+                  <span class="user-email">{{ member.email }}</span>
+                  <div class="user-actions">
+                    <button class="btn-danger" (click)="removeMember(member.id)">Remove</button>
+                  </div>
+                </li>
+              } @empty {
+                <li class="empty-state">No members in this team yet.</li>
+              }
+            </ul>
+          </div>
+
+          <!-- DIVIDER: Sits flush between sections -->
+          <hr class="section-divider" />
+
+          <!-- SECTION: AVAILABLE USERS -->
+          <div class="member-section">
+            <h4>Add New Members</h4>
+            <ul>
+              @for (user of availableUsers(); track user.id) {
+                <li>
+                  <span class="user-fullname">{{ user.firstName }} {{ user.lastName }}</span>
+                  <span class="user-email">{{ user.email }}</span>
+                  <div class="user-actions">
+                    <button class="btn-admin" (click)="addMember(user.id)">Add</button>
+                  </div>
+                </li>
+              } @empty {
+                <li class="empty-state">No more users available to add.</li>
+              }
+            </ul>
+          </div>
+        </div>
+
+        <!-- FOOTER: Standardized action area -->
+        <div class="popup-footer">
+          <button class="btn-secondary" (click)="closeMembersPopup()">Done</button>
+        </div>
       </div>
     </div>
   }

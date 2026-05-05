@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   ParseIntPipe,
+  Delete,
 } from '@nestjs/common';
 import { TeamsService } from '../service/teams.service';
 import { AuthGuard } from '../../auth/guard/auth.guard';
@@ -43,6 +44,19 @@ export class TeamsController {
     @Body() body: AddMemberDto,
   ) {
     return this.teamsService.addMember(teamId, request.user.sub, body.userId);
+  }
+
+  @Delete(':id/members/:userId')
+  async removeMember(
+    @Req() request: RequestWithUser,
+    @Param('id', ParseIntPipe) teamId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return await this.teamsService.removeMember(
+      teamId,
+      request.user.sub,
+      userId,
+    );
   }
 
   @Get(':id/available-users')
