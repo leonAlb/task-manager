@@ -215,14 +215,6 @@ export class Tasks implements OnInit {
     this.loadAvailableMembers(teamId);
   }
 
-  openRemoveMembersPopup() {
-    const teamId = this.selectedTeamId();
-    if (!teamId) return;
-    this.showTeamPopup.set(false);
-    this.showMembersPopup.set(true);
-    this.loadAvailableMembers(teamId);
-  }
-
   closeMembersPopup() {
     this.showMembersPopup.set(false);
   }
@@ -240,20 +232,21 @@ export class Tasks implements OnInit {
     type: 'user' | 'task' | 'team' | 'delegate' | 'create-team' | 'members',
   ) {
     if (event.target !== event.currentTarget) return;
+    const actions: Record<string, () => void> = {
+      user: () => this.showUserPopup.set(false),
+      task: () => this.closeTaskPopup(),
+      team: () => this.closeManageTeamsPopup(),
+      delegate: () => this.closeDelegatePopup(),
+      members: () => this.closeMembersPopup(),
+      'create-team': () => this.closeCreateTeamPopup(),
+    };
+    actions[type]?.();
+  }
 
-    if (type === 'user') {
-      this.showUserPopup.set(false);
-    } else if (type === 'task') {
-      this.closeTaskPopup();
-    } else if (type === 'team') {
-      this.closeManageTeamsPopup();
-    } else if (type === 'delegate') {
-      this.closeDelegatePopup();
-    } else if (type === 'members') {
-      this.closeMembersPopup();
-    } else {
-      this.closeCreateTeamPopup();
-    }
+  getRoleLabel(role?: Role, short = false): string {
+    if (role === Role.ADMIN) return 'Admin';
+    if (role === Role.PROJECT_MANAGER) return short ? 'PM' : 'Project Manager';
+    return 'User';
   }
 
   // --------------------------------------------------------------

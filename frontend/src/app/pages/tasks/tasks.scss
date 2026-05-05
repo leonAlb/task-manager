@@ -1,5 +1,10 @@
 @import '@angular/cdk/overlay-prebuilt.css';
 
+:host {
+  --sidebar-w: 280px;
+  --sidebar-collapsed-w: 60px;
+}
+
 .cdk-drag,
 .cdk-drag-preview,
 .cdk-drag-placeholder {
@@ -9,14 +14,14 @@
 // ─── Layout ───────────────────────────────────────────────────────
 .layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: var(--sidebar-w) 1fr;
   height: 100vh;
   transition: grid-template-columns 0.3s ease;
   overflow: hidden;
-}
 
-.layout.sidebar-collapsed {
-  grid-template-columns: 60px 1fr;
+  &.sidebar-collapsed {
+    grid-template-columns: var(--sidebar-collapsed-w) 1fr;
+  }
 }
 
 // ─── Sidebar ──────────────────────────────────────────────────────
@@ -25,7 +30,7 @@
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
   transition: all 0.3s ease;
 }
@@ -36,6 +41,7 @@
   justify-content: space-between;
   padding: 16px;
   border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 .user-profile {
@@ -80,21 +86,6 @@
   opacity: 0.7;
 }
 
-.collapse-btn {
-  background: none;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 4px 8px;
-  cursor: pointer;
-  color: var(--text-primary);
-  flex-shrink: 0;
-  transition: background 0.2s;
-
-  &:hover {
-    background-color: var(--border-color);
-  }
-}
-
 .sidebar-content {
   display: flex;
   flex-direction: column;
@@ -102,32 +93,16 @@
   padding: 16px;
   gap: 24px;
   overflow-y: auto;
+
+  button {
+    width: 100%;
+  }
 }
 
 .create-task {
   display: flex;
   flex-direction: column;
   gap: 8px;
-
-  input {
-    padding: 8px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.2s;
-
-    &:focus {
-      border-color: #4f7ef8;
-    }
-  }
-}
-
-.btn-create:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .admin-section {
@@ -172,10 +147,27 @@ button {
   transition:
     background 0.2s,
     opacity 0.2s;
-  width: 100%;
 
   &:hover {
     opacity: 0.8;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.collapse-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px 8px;
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: var(--border-color);
+    opacity: 1;
   }
 }
 
@@ -196,16 +188,57 @@ button {
   }
 }
 
-.btn-theme {
-  background-color: var(--bg-primary);
-  border-color: var(--border-color);
+.btn-primary {
+  background-color: #4f7ef8;
+  border-color: #4f7ef8;
+  color: white;
+
+  &:hover {
+    background-color: #3b6de0;
+    opacity: 1;
+  }
 }
 
+.btn-secondary {
+  background-color: var(--bg-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+
+  &:hover {
+    background-color: var(--border-color);
+    opacity: 1;
+  }
+}
+
+.btn-create {
+  background-color: #4f7ef8;
+  border-color: #4f7ef8;
+  color: white;
+
+  &:hover {
+    background-color: #3b6de0;
+    opacity: 1;
+  }
+}
+
+.btn-theme,
 .btn-logout {
   background-color: var(--bg-primary);
   border-color: var(--border-color);
 }
 
+// Square icon button — fixed 36px, no text, just an icon
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+// Circular icon button for collapsed sidebar
 .icon-btn {
   width: 38px;
   height: 38px;
@@ -220,7 +253,7 @@ button {
 .board {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -228,7 +261,7 @@ button {
 .column {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   border-right: 1px solid var(--border-color);
   overflow: hidden;
 
@@ -244,24 +277,24 @@ button {
   padding: 8px 16px 20px;
   scrollbar-width: thin;
   scrollbar-color: var(--border-color) transparent;
-}
 
-.task-list::-webkit-scrollbar {
-  width: 10px;
-}
+  &::-webkit-scrollbar {
+    width: 10px;
+  }
 
-.task-list::-webkit-scrollbar-track {
-  background: transparent;
-}
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-.task-list::-webkit-scrollbar-thumb {
-  background-color: var(--border-color);
-  border-radius: 999px;
-  border: 2px solid transparent;
-}
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 999px;
+    border: 2px solid transparent;
 
-.task-list::-webkit-scrollbar-thumb:hover {
-  background-color: var(--text-secondary);
+    &:hover {
+      background-color: var(--text-secondary);
+    }
+  }
 }
 
 .todo-column {
@@ -385,7 +418,6 @@ button {
   }
 }
 
-// Priority glows
 .priority-low {
   box-shadow:
     0 0 0 1px rgba(34, 197, 94, 0.25),
@@ -410,19 +442,17 @@ button {
 }
 
 .task-owner {
-  font-size: 11px !important;
-  font-weight: 400 !important;
-  opacity: 0.5 !important;
-  flex: 0 !important;
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.5;
+  flex: 0;
   white-space: nowrap;
   margin-right: 6px;
 }
 
 .edit-btn {
-  width: 28px !important;
+  width: 28px;
   height: 28px;
-  cursor: pointer;
-  min-width: unset;
   flex-shrink: 0;
   padding: 0;
   border-radius: 6px;
@@ -443,10 +473,8 @@ button {
 }
 
 .delete-btn {
-  width: 28px !important;
+  width: 28px;
   height: 28px;
-  cursor: pointer;
-  min-width: unset;
   flex-shrink: 0;
   padding: 0;
   border-radius: 6px;
@@ -471,7 +499,7 @@ button {
   transition: transform 0.2s;
 }
 
-// ─── User Popup ───────────────────────────────────────────────────
+// ─── Popups ───────────────────────────────────────────────────────
 .popup-overlay {
   position: fixed;
   inset: 0;
@@ -480,41 +508,38 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 16px;
 }
 
-// ─── User Popup Container ─────────────────────────────────────────
 .user-popup {
   background: var(--bg-popup);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 24px;
-  // min-width is crucial to prevent columns from collapsing/stacking
-  min-width: 650px;
-  max-width: 750px;
-  max-height: 70vh;
+  width: min(700px, 100%);
+  max-height: 80vh;
   overflow-y: auto;
   z-index: 1000;
-
-  // 1. Prevents layout jump when scrollbar appears
   scrollbar-gutter: stable;
   padding-right: 12px;
-
-  // 2. Custom scrollbar styling (Floating pill style)
   scrollbar-width: thin;
   scrollbar-color: var(--border-color) transparent;
 
   &::-webkit-scrollbar {
     width: 12px;
   }
+
   &::-webkit-scrollbar-track {
     background: transparent;
     margin: 8px 0;
   }
+
   &::-webkit-scrollbar-thumb {
     background-color: var(--border-color);
     border-radius: 10px;
     border: 3px solid transparent;
     background-clip: padding-box;
+
     &:hover {
       background-color: var(--text-secondary);
     }
@@ -529,20 +554,17 @@ button {
   li {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     padding: 14px 8px;
     border-bottom: 1px solid var(--border-color);
-    transition: background 0.2s ease;
 
     &:last-child {
       border-bottom: none;
     }
 
-    // ─── Column Lockdown ──────────────────────────────────────────
-
     .user-fullname {
-      // Fixed width prevents long names from pushing buttons out of view
-      flex: 0 0 170px;
+      flex: 0 1 170px;
+      min-width: 0;
       font-weight: 600;
       color: var(--text-primary);
       white-space: nowrap;
@@ -551,8 +573,8 @@ button {
     }
 
     .user-email {
-      // Fluid column: only the email shrinks/grows
       flex: 1;
+      min-width: 0;
       font-size: 13px;
       opacity: 0.6;
       color: var(--text-primary);
@@ -562,72 +584,62 @@ button {
     }
 
     .user-role-label {
-      // Fixed width for the role text (PM / User)
-      flex: 0 0 45px;
+      flex-shrink: 0;
       font-size: 11px;
-      text-align: right;
       color: var(--text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
-    // ─── Button Group ─────────────────────────────────────────────
-
     .user-actions {
-      // Rigid container: prevents buttons from wrapping or stacking
-      flex: 0 0 160px;
+      flex-shrink: 0;
       display: flex;
       justify-content: flex-end;
       align-items: center;
       gap: 8px;
 
       .btn-admin {
-        flex: 0 0 110px;
-        width: 110px;
-        padding: 7px 0;
+        min-width: 90px;
+        padding: 7px 12px;
         font-size: 12px;
         white-space: nowrap;
-        background-color: var(--bg-primary);
-        border: 1px solid var(--border-color);
-        color: var(--text-primary);
-        border-radius: 8px;
-        cursor: pointer;
 
         &:hover {
           background-color: var(--border-color);
+          opacity: 1;
         }
       }
 
-      .btn-danger {
-        flex: 0 0 36px;
-        height: 36px;
-        width: 36px;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+      .btn-icon {
         background-color: #dc2626;
-        border: none;
+        border-color: #dc2626;
         color: white;
-        border-radius: 8px;
-        font-size: 16px;
-        cursor: pointer;
 
         &:hover {
           background-color: #b91c1c;
+          opacity: 1;
         }
       }
 
       .admin-badge {
-        flex: 0 0 110px;
+        min-width: 90px;
         background-color: #4f7ef8;
         color: white;
         font-size: 11px;
-        padding: 4px 0;
+        padding: 4px 8px;
         text-align: center;
         border-radius: 999px;
       }
     }
+  }
+
+  .empty-state {
+    justify-content: center;
+    color: var(--text-secondary);
+    font-style: italic;
+    font-size: 13px;
+    opacity: 0.7;
+    border-bottom: none;
   }
 }
 
@@ -654,7 +666,6 @@ button {
     border: none;
     color: var(--text-primary);
     font-size: 24px;
-    cursor: pointer;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -662,40 +673,12 @@ button {
 
     &:hover {
       background-color: var(--border-color);
+      opacity: 1;
     }
   }
 }
 
-.user-email {
-  font-size: 12px;
-  opacity: 0.6;
-  flex: 1;
-  min-width: 140px;
-}
-
-.user-fullname {
-  min-width: 140px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.user-role-label {
-  width: 70px;
-  text-align: right;
-  font-size: 12px;
-  opacity: 0.7;
-  color: var(--text-secondary);
-}
-
-.admin-badge {
-  font-size: 11px;
-  background-color: #4f7ef8;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 999px;
-}
-
-// ─── Create Task Form ─────────────────────────────────────────────
+// ─── Create Task / Delegate Form ──────────────────────────────────
 .create-task-form {
   display: flex;
   flex-direction: column;
@@ -718,28 +701,6 @@ button {
       border-color: #4f7ef8;
     }
   }
-
-  .task-field {
-    width: 100%;
-  }
-
-  .mat-mdc-form-field {
-    width: 100%;
-  }
-
-  .mat-mdc-text-field-wrapper,
-  .mat-mdc-form-field-flex {
-    background-color: var(--bg-primary);
-  }
-
-  .mat-mdc-form-field-infix {
-    padding: 8px 12px;
-    min-height: 40px;
-  }
-
-  .mat-mdc-form-field-subscript-wrapper {
-    margin-top: 4px;
-  }
 }
 
 .popup-actions {
@@ -750,30 +711,18 @@ button {
   button {
     flex: 1;
   }
-
-  .btn-create {
-    background-color: #4f7ef8;
-    border-color: #4f7ef8;
-    color: white;
-
-    &:hover {
-      background-color: #3b6de0;
-      opacity: 1;
-    }
-  }
 }
 
+// ─── Manage Teams Popup ───────────────────────────────────────────
 .manage-teams-popup {
-  background: var(--bg-popup);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  min-width: 520px; // Slightly wider to fit the 3-button footer
+  width: min(600px, 100%);
   max-height: 80vh;
   display: flex;
-  flex-direction: column; // Allows header/body/footer split
-  z-index: 1000;
+  flex-direction: column;
+  overflow: hidden;
 
   .teams-list-container {
+    flex: 1;
     padding: 20px;
     overflow-y: auto;
     scrollbar-gutter: stable;
@@ -783,45 +732,18 @@ button {
       padding: 0;
       margin: 0;
     }
-
-    li {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border-color);
-
-      .team-name {
-        flex: 0 0 140px; // Locked
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .member-count {
-        flex: 1; // Fluid spacer
-        font-size: 13px;
-        opacity: 0.6;
-      }
-
-      .btn-select {
-        flex: 0 0 180px; // Locked width for the Select/Selected button
-        padding: 8px 0;
-      }
-    }
   }
 
   .popup-footer {
     padding: 20px;
     border-top: 1px solid var(--border-color);
     display: grid;
-    grid-template-columns: 1fr 1fr 1.2fr; // Balanced columns for the 3 buttons
+    grid-template-columns: 1fr 1fr 1.2fr;
     gap: 12px;
-    background: rgba(255, 255, 255, 0.02); // Subtly different background
     border-radius: 0 0 16px 16px;
 
     button {
+      width: 100%;
       padding: 10px;
       font-weight: 500;
       white-space: nowrap;
@@ -829,31 +751,18 @@ button {
   }
 }
 
+// ─── Manage Members Popup ─────────────────────────────────────────
 .manage-members-popup {
-  min-width: 650px;
-  max-width: 750px;
+  width: min(700px, 100%);
   max-height: 85vh;
   display: flex;
   flex-direction: column;
   padding: 0;
-  background: var(--bg-popup);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
   overflow: hidden;
 
   .popup-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     padding: 24px 28px;
-    border-bottom: 1px solid var(--border-color);
-
-    h3 {
-      font-size: 18px;
-      font-weight: 700;
-      margin: 0;
-      color: var(--text-primary);
-    }
+    margin-bottom: 0;
 
     .close-btn {
       width: 32px;
@@ -862,13 +771,14 @@ button {
       border: none;
       color: var(--text-primary);
       font-size: 24px;
-      cursor: pointer;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 50%;
+
       &:hover {
         background-color: var(--border-color);
+        opacity: 1;
       }
     }
   }
@@ -882,6 +792,7 @@ button {
     &::-webkit-scrollbar {
       width: 12px;
     }
+
     &::-webkit-scrollbar-thumb {
       background-color: var(--border-color);
       border-radius: 10px;
@@ -893,10 +804,10 @@ button {
       list-style: none;
       padding: 0;
       margin: 0;
+    }
 
-      li:last-child {
-        border-bottom: none;
-      }
+    li:last-child {
+      border-bottom: none;
     }
   }
 
@@ -921,48 +832,53 @@ button {
       border-bottom: 1px solid var(--border-color);
 
       .user-fullname {
-        flex: 0 0 170px;
+        flex: 0 1 170px;
+        min-width: 0;
         font-weight: 600;
         color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .user-email {
         flex: 1;
+        min-width: 0;
         font-size: 13px;
         opacity: 0.6;
         color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .user-actions {
-        flex: 0 0 100px; // Fixed container width
+        flex-shrink: 0;
         display: flex;
         justify-content: flex-end;
 
         button {
-          // LOCK THE SIZE
-          flex: 0 0 85px;
-          width: 85px;
+          min-width: 80px;
           height: 32px;
-          padding: 0; // Remove padding to prevent text-length variance
+          padding: 0 14px;
+          font-size: 12px;
+          font-weight: 500;
+          white-space: nowrap;
           display: flex;
           align-items: center;
           justify-content: center;
-
-          font-size: 12px;
-          font-weight: 500;
-          border-radius: 8px;
-          cursor: pointer;
           transition: all 0.2s ease;
         }
 
         .btn-danger {
-          background-color: rgba(248, 113, 113, 0.1); // Very subtle dark red
+          background-color: rgba(248, 113, 113, 0.1);
           color: #f87171;
           border: 1px solid rgba(248, 113, 113, 0.2);
 
           &:hover {
             background-color: rgba(248, 113, 113, 0.2);
             border-color: rgba(248, 113, 113, 0.5);
+            opacity: 1;
           }
         }
 
@@ -973,6 +889,7 @@ button {
 
           &:hover {
             background-color: var(--border-color);
+            opacity: 1;
           }
         }
       }
@@ -993,17 +910,10 @@ button {
     background: rgba(0, 0, 0, 0.05);
 
     .btn-secondary {
-      width: 100px;
+      min-width: 100px;
       height: 36px;
-      background: var(--bg-primary);
-      border: 1px solid var(--border-color);
-      color: var(--text-primary);
-      border-radius: 8px;
+      padding: 0 16px;
       font-weight: 500;
-      cursor: pointer;
-      &:hover {
-        background: var(--border-color);
-      }
     }
   }
 }

@@ -8,16 +8,8 @@
         </div>
         @if (!sidebarCollapsed()) {
           <div class="user-info">
-            <span class="user-name"
-              >{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</span
-            >
-            <span class="user-role">{{
-              currentUser()?.role === Role.ADMIN
-                ? 'Admin'
-                : currentUser()?.role === Role.PROJECT_MANAGER
-                  ? 'Project Manager'
-                  : 'User'
-            }}</span>
+            <span class="user-name">{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</span>
+            <span class="user-role">{{ getRoleLabel(currentUser()?.role) }}</span>
           </div>
         }
       </div>
@@ -32,7 +24,7 @@
           <button (click)="openCreatePopup()">Add Task</button>
         </div>
 
-        @if (currentUser()?.role === Role.ADMIN) {
+        @if (isAdmin()) {
           <div class="admin-section">
             <span class="section-label">Admin</span>
             <button class="btn-admin" (click)="seedData()">Seed Data</button>
@@ -42,7 +34,7 @@
           </div>
         }
 
-        @if (currentUser()?.role === Role.PROJECT_MANAGER) {
+        @if (isProjectManager()) {
           <div class="admin-section">
             <span class="section-label">Project Manager</span>
             <button class="btn-admin" (click)="openCreateTeamPopup()">Create Team</button>
@@ -82,17 +74,7 @@
             <li>
               <span class="user-fullname">{{ user.firstName }} {{ user.lastName }}</span>
               <span class="user-email">{{ user.email }}</span>
-              <span class="user-role-label">
-                {{
-                  user.role === Role.ADMIN
-                    ? 'Admin'
-                    : user.role === Role.PROJECT_MANAGER
-                      ? 'PM'
-                      : 'User'
-                }}
-              </span>
-
-              <!-- Lock the buttons into this container -->
+              <span class="user-role-label">{{ getRoleLabel(user.role, true) }}</span>
               <div class="user-actions">
                 @if (user.email !== currentUser()?.email) {
                   @if (user.role !== Role.ADMIN) {
@@ -100,7 +82,7 @@
                       {{ user.role === Role.PROJECT_MANAGER ? 'Make User' : 'Make PM' }}
                     </button>
                   }
-                  <button class="btn-danger" (click)="deleteUser(user.id)">🗑️</button>
+                  <button class="btn-icon btn-danger" (click)="deleteUser(user.id)">🗑️</button>
                 } @else {
                   <span class="admin-badge">Admin</span>
                 }
@@ -137,10 +119,9 @@
     </div>
   }
 
-  <!-- TEAM POPUP -->
+  <!-- MANAGE TEAMS POPUP -->
   @if (showTeamPopup()) {
     <div class="popup-overlay" (click)="closeIfOverlay($event, 'team')">
-      <!-- Using a specific class for team popup to handle the wider footer -->
       <div class="user-popup manage-teams-popup" (mousedown)="$event.stopPropagation()">
         <div class="popup-header">
           <h3>Manage Teams</h3>
@@ -153,7 +134,6 @@
               <li>
                 <span class="user-fullname">{{ team.name }}</span>
                 <span class="user-email">{{ team.memberCount }} members</span>
-
                 <div class="user-actions">
                   <button
                     class="btn-admin"
@@ -171,7 +151,6 @@
           </ul>
         </div>
 
-        <!-- Action Footer -->
         <div class="popup-footer">
           <button class="btn-secondary" (click)="closeManageTeamsPopup()">Close</button>
           <button class="btn-secondary" [disabled]="!selectedTeamId()" (click)="openMembersPopup()">
@@ -189,15 +168,12 @@
   @if (showMembersPopup()) {
     <div class="popup-overlay" (click)="closeIfOverlay($event, 'members')">
       <div class="user-popup manage-members-popup" (mousedown)="$event.stopPropagation()">
-        <!-- HEADER: Fixed padding and alignment -->
         <div class="popup-header">
           <h3>Team Members</h3>
           <button class="close-btn" (click)="closeMembersPopup()">&times;</button>
         </div>
 
-        <!-- SCROLL AREA: Isolated scrolling for long lists -->
         <div class="members-scroll-area">
-          <!-- SECTION: CURRENT MEMBERS -->
           <div class="member-section">
             <h4>Current Members ({{ users().length }})</h4>
             <ul>
@@ -215,10 +191,8 @@
             </ul>
           </div>
 
-          <!-- DIVIDER: Sits flush between sections -->
           <hr class="section-divider" />
 
-          <!-- SECTION: AVAILABLE USERS -->
           <div class="member-section">
             <h4>Add New Members</h4>
             <ul>
@@ -237,7 +211,6 @@
           </div>
         </div>
 
-        <!-- FOOTER: Standardized action area -->
         <div class="popup-footer">
           <button class="btn-secondary" (click)="closeMembersPopup()">Done</button>
         </div>
@@ -263,7 +236,7 @@
             </li>
           }
           @if (users().length === 0) {
-            <li>No team members found.</li>
+            <li class="empty-state">No team members found.</li>
           }
         </ul>
         <div class="create-task-form">
@@ -348,7 +321,7 @@
     </div>
   }
 
-  <!-- KANBAN COLUMNS -->
+  <!-- KANBAN BOARD -->
   <section class="board">
     @for (column of columns; track column.id) {
       <div class="column {{ column.class }}">
