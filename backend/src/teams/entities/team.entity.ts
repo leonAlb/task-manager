@@ -14,7 +14,7 @@ export class Team {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true, nullable: false })
+  @Column({ unique: true })
   name: string;
 
   @Column()
@@ -24,7 +24,7 @@ export class Team {
   @JoinColumn({ name: 'managerId' })
   manager: User;
 
-  @ManyToMany(() => User, (user) => user.teams)
+  @ManyToMany(() => User)
   @JoinTable()
   members: User[];
 }
