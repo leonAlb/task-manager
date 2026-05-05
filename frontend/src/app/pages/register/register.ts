@@ -12,7 +12,7 @@ import { AuthService } from '../../services/auth';
 import { Router, RouterLink } from '@angular/router';
 import { RegisterCredentials } from '../../models/auth.models';
 
-export const passwordMatchValidator: ValidatorFn = (
+const passwordMatchValidator: ValidatorFn = (
   control: AbstractControl,
 ): ValidationErrors | null => {
   const password = control.get('password')?.value;

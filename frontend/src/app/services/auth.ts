@@ -1,11 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import {
-  AuthCredentials,
-  AuthResponse,
-  RegisterCredentials,
-  UserProfile,
-} from '../models/auth.models';
+import { AuthCredentials, AuthResponse, RegisterCredentials, UserProfile } from '../models/auth.models';
 import { switchMap, tap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
@@ -15,65 +10,53 @@ export class AuthService {
 
   currentUser = signal<UserProfile | null>(null);
 
-  // Method to fetch the current user's profile
   getMe() {
     return this.http.get<UserProfile>(`${this.apiUrl}/me`);
   }
 
-  // Registration method
   register(credentials: RegisterCredentials) {
     return this.http
       .post<void>(`${this.apiUrl}/register`, credentials)
-      .pipe(
-        switchMap(() => this.login({ email: credentials.email, password: credentials.password })),
-      );
+      .pipe(switchMap(() => this.login({ email: credentials.email, password: credentials.password })));
   }
 
-  // Login method that stores tokens in localStorage and updates the current user profile
   login(credentials: AuthCredentials) {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
-      tap((response) => {
-        localStorage.setItem('access_token', response.access_token);
-        localStorage.setItem('refresh_token', response.refresh_token);
-      }),
+      tap((response) => this.storeTokens(response)),
       switchMap(() => this.getMe()),
       tap((profile) => this.currentUser.set(profile)),
     );
   }
 
-  // Logout method that removes tokens from localStorage
   logout() {
     const refreshToken = localStorage.getItem('refresh_token');
-
-    // Clear tokens immediately so the UI signs out and stops using them
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    this.currentUser.set(null);
-
+    this.clearSession();
     return this.http.post(`${this.apiUrl}/logout`, { refresh_token: refreshToken });
   }
 
-  // Method to refresh access token using the refresh token
   refreshToken() {
     const refreshToken = localStorage.getItem('refresh_token');
     return this.http
       .post<AuthResponse>(`${this.apiUrl}/refresh`, { refresh_token: refreshToken })
-      .pipe(
-        tap((response) => {
-          localStorage.setItem('access_token', response.access_token);
-          localStorage.setItem('refresh_token', response.refresh_token);
-        }),
-      );
+      .pipe(tap((response) => this.storeTokens(response)));
   }
 
-  // Method to check if the user is logged in based on the presence of an access token
   isLoggedIn(): boolean {
-    const token = localStorage.getItem('access_token');
-    return !!token;
+    return !!localStorage.getItem('access_token');
   }
 
-  // Method to get the current access token
   getAccessToken(): string | null {
     return localStorage.getItem('access_token');
+  }
+
+  clearSession() {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    this.currentUser.set(null);
+  }
+
+  private storeTokens(response: AuthResponse) {
+    localStorage.setItem('access_token', response.access_token);
+    localStorage.setItem('refresh_token', response.refresh_token);
   }
 }

@@ -11,16 +11,13 @@ import { ThemeService } from './services/theme';
 })
 export class App implements OnInit {
   private authService = inject(AuthService);
-  protected themeService = inject(ThemeService);
+  private _theme = inject(ThemeService); // eager-init theme on app boot
 
   ngOnInit() {
     if (this.authService.isLoggedIn()) {
       this.authService.getMe().subscribe({
         next: (profile) => this.authService.currentUser.set(profile),
-        error: () => {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-        },
+        error: () => this.authService.clearSession(),
       });
     }
   }

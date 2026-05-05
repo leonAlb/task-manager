@@ -1,6 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { inject } from '@angular/core';
 import { CreateTask, ReorderTaskItem, Task, UpdateTask } from '../models/tasks.models';
 import { User } from '../models/auth.models';
 
@@ -19,8 +18,8 @@ export class TasksService {
     return this.http.get<Task[]>(`${this.apiUrl}`);
   }
 
-  createTask(Task: CreateTask) {
-    return this.http.post<Task>(`${this.apiUrl}`, Task);
+  createTask(task: CreateTask) {
+    return this.http.post<Task>(this.apiUrl, task);
   }
 
   delegateTask(task: CreateTask) {
