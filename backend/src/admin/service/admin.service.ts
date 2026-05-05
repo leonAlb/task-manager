@@ -11,6 +11,7 @@ import * as bcrypt from 'bcrypt';
 import { User, Role } from '../../auth/entities/user.entity';
 import { Task } from '../../tasks/entities/task.entity';
 import { TaskPriority, TaskStatus } from '../../tasks/entities/task.entity';
+import { Team } from '../../auth/entities/team.entity';
 
 @Injectable()
 export class AdminService implements OnApplicationBootstrap {
@@ -19,6 +20,8 @@ export class AdminService implements OnApplicationBootstrap {
     private usersRepository: Repository<User>,
     @InjectRepository(Task)
     private tasksRepository: Repository<Task>,
+    @InjectRepository(Team)
+    private teamsRepository: Repository<Team>,
     private configService: ConfigService,
   ) {}
 
@@ -209,6 +212,27 @@ export class AdminService implements OnApplicationBootstrap {
     return { message: 'All tasks deleted' };
   }
 
+  async toggleUserRole(id: number) {
+    const user = await this.usersRepository.findOne({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.role === Role.ADMIN) {
+      throw new ForbiddenException("Can't change the admin role");
+    }
+
+    if (user.role === Role.USER) {
+      user.role = Role.PROJECT_MANAGER;
+    } else {
+      await this.teamsRepository.delete({ managerId: id });
+      user.role = Role.USER;
+    }
+
+    return this.usersRepository.save(user);
+  }
+
   async deleteUser(id: number) {
     const user = await this.usersRepository.findOne({ where: { id } });
 
@@ -221,6 +245,41 @@ export class AdminService implements OnApplicationBootstrap {
     }
 
     return await this.usersRepository.delete(id);
+  }
+
+  async getAllTeams() {
+    return this.teamsRepository.find({
+      relations: ['manager', 'members'],
+    });
+  }
+
+  async getTeamDetail(teamId: number) {
+    const team = await this.teamsRepository.findOne({
+      where: { id: teamId },
+      relations: ['manager', 'members', 'members.tasks'],
+    });
+
+    if (!team) {
+      throw new NotFoundException('Team not found');
+    }
+
+    return {
+      id: team.id,
+      name: team.name,
+      manager: {
+        id: team.manager.id,
+        firstName: team.manager.firstName,
+        lastName: team.manager.lastName,
+      },
+      members: team.members.map((member) => ({
+        user: {
+          id: member.id,
+          firstName: member.firstName,
+          lastName: member.lastName,
+        },
+        tasks: member.tasks,
+      })),
+    };
   }
 
   private async findOrCreateUser(

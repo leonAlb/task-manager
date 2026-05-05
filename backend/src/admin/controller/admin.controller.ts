@@ -1,7 +1,9 @@
 import {
   Controller,
   Delete,
+  Get,
   Post,
+  Patch,
   UseGuards,
   Param,
   ParseIntPipe,
@@ -36,5 +38,20 @@ export class AdminController {
   @Delete('delete-user/:id')
   async deleteUser(@Param('id', ParseIntPipe) id: number) {
     return await this.adminService.deleteUser(id);
+  }
+
+  @Patch('users/:id/role')
+  async toggleUserRole(@Param('id', ParseIntPipe) id: number) {
+    return await this.adminService.toggleUserRole(id);
+  }
+
+  @Get('teams')
+  async getAllTeams() {
+    return await this.adminService.getAllTeams();
+  }
+
+  @Get('teams/:id')
+  async getTeamDetail(@Param('id', ParseIntPipe) id: number) {
+    return await this.adminService.getTeamDetail(id);
   }
 }
