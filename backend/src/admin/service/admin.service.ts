@@ -178,15 +178,23 @@ export class AdminService implements OnApplicationBootstrap {
   async deleteUser(id: number) {
     const user = await this.usersRepository.findOne({ where: { id } });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (user.role === Role.ADMIN) {
+    if (!user) throw new NotFoundException('User not found');
+    if (user.role === Role.ADMIN)
       throw new ForbiddenException("Can't delete the admin user");
+
+    const teams = await this.teamsRepository
+      .createQueryBuilder('team')
+      .innerJoinAndSelect('team.members', 'member', 'member.id = :id', { id })
+      .getMany();
+
+    if (teams.length) {
+      for (const team of teams) {
+        team.members = team.members.filter((m) => m.id !== id);
+      }
+      await this.teamsRepository.save(teams);
     }
 
-    return await this.usersRepository.delete(id);
+    return this.usersRepository.delete(id);
   }
 
   async getAllTeams() {

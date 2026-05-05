@@ -20,7 +20,7 @@ export class Team {
   @Column()
   managerId: number;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'managerId' })
   manager: User;
 

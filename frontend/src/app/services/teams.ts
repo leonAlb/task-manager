@@ -33,4 +33,8 @@ export class TeamsService {
   removeMember(teamId: number, userId: number) {
     return this.http.delete(`${this.apiUrl}/${teamId}/members/${userId}`);
   }
+
+  deleteTeam(teamId: number) {
+    return this.http.delete(`${this.apiUrl}/${teamId}`);
+  }
 }

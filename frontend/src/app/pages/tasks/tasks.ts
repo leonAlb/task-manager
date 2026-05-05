@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
 import {
   CreateTask,
   ReorderTaskItem,
@@ -249,6 +249,30 @@ export class Tasks implements OnInit {
     return 'User';
   }
 
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    if (this.showTaskPopup()) { this.closeTaskPopup(); return; }
+    if (this.showDelegatePopup()) { this.closeDelegatePopup(); return; }
+    if (this.showMembersPopup()) { this.closeMembersPopup(); return; }
+    if (this.showTeamPopup()) { this.closeManageTeamsPopup(); return; }
+    if (this.showCreateTeamPopup()) { this.closeCreateTeamPopup(); return; }
+    if (this.showUserPopup()) { this.showUserPopup.set(false); }
+  }
+
+  @HostListener('document:keydown.enter', ['$event'])
+  onEnter(event: Event) {
+    if (this.showTaskPopup() && this.isTaskFormValid()) {
+      event.preventDefault();
+      this.taskPopupMode() === 'create' ? this.createTask() : this.saveTask();
+    } else if (this.showCreateTeamPopup() && this.isTeamFormValid()) {
+      event.preventDefault();
+      this.createTeam();
+    } else if (this.showDelegatePopup() && this.isDelegateFormValid()) {
+      event.preventDefault();
+      this.delegateTask();
+    }
+  }
+
   // --------------------------------------------------------------
   // Task Management
   // --------------------------------------------------------------
@@ -319,6 +343,17 @@ export class Tasks implements OnInit {
   deleteTask(id: number) {
     this.tasksService.deleteTask(id).subscribe(() => {
       this.tasks.update((tasks) => tasks.filter((t) => t.id !== id));
+    });
+  }
+
+  deleteTeam(teamId: number) {
+    this.teamsService.deleteTeam(teamId).subscribe(() => {
+      if (this.selectedTeamId() === teamId) {
+        this.selectedTeamId.set(null);
+        this.users.set([]);
+        this.tasks.set([]);
+      }
+      this.loadManagedTeams();
     });
   }
 

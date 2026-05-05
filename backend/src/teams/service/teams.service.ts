@@ -13,6 +13,14 @@ export class TeamsService {
     private usersRepository: Repository<User>,
   ) {}
 
+  async deleteTeam(teamId: number, managerId: number): Promise<void> {
+    const team = await this.teamsRepository.findOne({
+      where: { id: teamId, managerId },
+    });
+    if (!team) throw new NotFoundException('Team not found');
+    await this.teamsRepository.remove(team);
+  }
+
   async createTeam(managerId: number, name: string): Promise<Team> {
     const team = this.teamsRepository.create({ name, managerId });
     return this.teamsRepository.save(team);

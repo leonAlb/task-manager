@@ -24,6 +24,14 @@ import { AddMemberDto } from '../dto/add-member.dto';
 export class TeamsController {
   constructor(private teamsService: TeamsService) {}
 
+  @Delete(':id')
+  async deleteTeam(
+    @Req() request: RequestWithUser,
+    @Param('id', ParseIntPipe) teamId: number,
+  ) {
+    return this.teamsService.deleteTeam(teamId, request.user.sub);
+  }
+
   @Get()
   async getManagedTeams(@Req() request: RequestWithUser) {
     return this.teamsService.getManagedTeams(request.user.sub);

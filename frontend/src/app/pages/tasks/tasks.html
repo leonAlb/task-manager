@@ -82,7 +82,7 @@
                       {{ user.role === Role.PROJECT_MANAGER ? 'Make User' : 'Make PM' }}
                     </button>
                   }
-                  <button class="btn-icon btn-danger" (click)="deleteUser(user.id)">🗑️</button>
+                  <button class="btn-danger" (click)="deleteUser(user.id)">Remove</button>
                 } @else {
                   <span class="admin-badge">Admin</span>
                 }
@@ -142,6 +142,7 @@
                   >
                     {{ selectedTeamId() === team.id ? 'Selected' : 'Select' }}
                   </button>
+                  <button class="btn-danger" (click)="deleteTeam(team.id)">Remove</button>
                 </div>
               </li>
             }

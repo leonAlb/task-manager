@@ -177,14 +177,14 @@ button {
 }
 
 .btn-danger {
-  background-color: #fee2e2;
-  border-color: #fca5a5;
-  color: #b91c1c;
+  background-color: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.2);
+  color: #f87171;
 
-  .dark & {
-    background-color: #2a1010;
-    border-color: #7f1d1d;
-    color: #fca5a5;
+  &:hover {
+    background-color: rgba(248, 113, 113, 0.2);
+    border-color: rgba(248, 113, 113, 0.5);
+    opacity: 1;
   }
 }
 
@@ -610,15 +610,11 @@ button {
         }
       }
 
-      .btn-icon {
-        background-color: #dc2626;
-        border-color: #dc2626;
-        color: white;
-
-        &:hover {
-          background-color: #b91c1c;
-          opacity: 1;
-        }
+      .btn-danger {
+        min-width: 90px;
+        padding: 7px 12px;
+        font-size: 12px;
+        white-space: nowrap;
       }
 
       .admin-badge {
@@ -720,22 +716,49 @@ button {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding: 0;
+
+  .popup-header {
+    padding: 16px 20px;
+    margin-bottom: 0;
+  }
 
   .teams-list-container {
     flex: 1;
-    padding: 20px;
+    padding: 4px 0px;
     overflow-y: auto;
-    scrollbar-gutter: stable;
+    scrollbar-gutter: stable both-edges;
 
     ul {
       list-style: none;
       padding: 0;
       margin: 0;
     }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .user-fullname {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .user-email {
+        flex: none;
+        white-space: nowrap;
+      }
+
+      .user-actions {
+        margin-left: auto;
+        flex-shrink: 0;
+      }
+    }
   }
 
   .popup-footer {
-    padding: 20px;
+    padding: 12px 20px;
     border-top: 1px solid var(--border-color);
     display: grid;
     grid-template-columns: 1fr 1fr 1.2fr;
@@ -785,9 +808,9 @@ button {
 
   .members-scroll-area {
     flex: 1;
-    padding: 0 28px;
+    padding: 0 12px;
     overflow-y: auto;
-    scrollbar-gutter: stable;
+    scrollbar-gutter: stable both-edges;
 
     &::-webkit-scrollbar {
       width: 12px;
@@ -828,7 +851,7 @@ button {
       display: flex;
       align-items: center;
       gap: 16px;
-      padding: 12px 8px;
+      padding: 12px 0;
       border-bottom: 1px solid var(--border-color);
 
       .user-fullname {
@@ -854,6 +877,7 @@ button {
 
       .user-actions {
         flex-shrink: 0;
+        margin-left: auto;
         display: flex;
         justify-content: flex-end;
 
@@ -870,17 +894,6 @@ button {
           transition: all 0.2s ease;
         }
 
-        .btn-danger {
-          background-color: rgba(248, 113, 113, 0.1);
-          color: #f87171;
-          border: 1px solid rgba(248, 113, 113, 0.2);
-
-          &:hover {
-            background-color: rgba(248, 113, 113, 0.2);
-            border-color: rgba(248, 113, 113, 0.5);
-            opacity: 1;
-          }
-        }
 
         .btn-admin {
           background-color: var(--bg-primary);
