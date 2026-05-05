@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import { User } from '../../auth/entities/user.entity';
+import { User, Role } from '../../auth/entities/user.entity';
 import { Task } from '../../tasks/entities/task.entity';
 import { TaskPriority, TaskStatus } from '../../tasks/entities/task.entity';
 
@@ -49,6 +49,7 @@ export class AdminService implements OnApplicationBootstrap {
       lastName: 'User',
       email: adminEmail,
       password: hashedPassword,
+      role: Role.ADMIN,
     });
 
     await this.usersRepository.save(admin);
@@ -185,8 +186,8 @@ export class AdminService implements OnApplicationBootstrap {
 
   async deleteAllData() {
     await this.usersRepository.query(
-      'CREATE TABLE IF NOT EXISTS "temp_user" AS SELECT * FROM "user" WHERE email = $1',
-      [this.configService.get('ADMIN_EMAIL')],
+      'CREATE TABLE IF NOT EXISTS "temp_user" AS SELECT * FROM "user" WHERE role = $1',
+      [Role.ADMIN],
     );
     await this.usersRepository.query(
       'TRUNCATE TABLE "user" RESTART IDENTITY CASCADE',
@@ -215,7 +216,7 @@ export class AdminService implements OnApplicationBootstrap {
       throw new NotFoundException('User not found');
     }
 
-    if (user.email === this.configService.get('ADMIN_EMAIL')) {
+    if (user.role === Role.ADMIN) {
       throw new ForbiddenException("Can't delete the admin user");
     }
 

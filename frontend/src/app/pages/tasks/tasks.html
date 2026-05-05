@@ -11,7 +11,7 @@
             <span class="user-name"
               >{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</span
             >
-            <span class="user-role">{{ currentUser()?.isAdmin ? 'Admin' : 'User' }}</span>
+            <span class="user-role">{{ currentUser()?.role === Role.ADMIN ? 'Admin' : 'User' }}</span>
           </div>
         }
       </div>
@@ -26,7 +26,7 @@
           <button (click)="openCreatePopup()">Add Task</button>
         </div>
 
-        @if (currentUser()?.isAdmin) {
+        @if (currentUser()?.role === Role.ADMIN) {
           <div class="admin-section">
             <span class="section-label">Admin</span>
             <button class="btn-admin" (click)="seedData()">Seed Data</button>

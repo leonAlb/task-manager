@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ConfigModule } from '@nestjs/config';
 import { AuthGuard } from './guard/auth.guard';
+import { RolesGuard } from './guard/roles.guard';
 import { User } from './entities/user.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 
@@ -27,7 +28,7 @@ import { RefreshToken } from './entities/refresh-token.entity';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, AuthGuard],
-  exports: [AuthService],
+  providers: [AuthService, AuthGuard, RolesGuard],
+  exports: [AuthService, AuthGuard, RolesGuard],
 })
 export class AuthModule {}

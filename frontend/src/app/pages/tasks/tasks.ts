@@ -7,7 +7,7 @@ import {
   TaskStatus,
   UpdateTask,
 } from '../../models/tasks.models';
-import { User } from '../../models/auth.models';
+import { User, Role } from '../../models/auth.models';
 import { TasksService } from '../../services/tasks';
 import { AuthService } from '../../services/auth';
 import { Router } from '@angular/router';
@@ -106,6 +106,7 @@ export class Tasks implements OnInit {
   themeService = inject(ThemeService);
   private router = inject(Router);
   TaskStatus = TaskStatus;
+  Role = Role;
 
   // --------------------------------------------------------------
   // UI State

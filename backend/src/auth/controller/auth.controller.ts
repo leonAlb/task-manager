@@ -6,13 +6,14 @@ import {
   HttpStatus,
   Get,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from '../service/auth.service';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { AuthGuard } from '../guard/auth.guard';
-import { CurrentUser } from '../decorator/current-user.decorator';
+import type { RequestWithUser } from '../guard/auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -20,8 +21,8 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(AuthGuard)
-  async getMe(@CurrentUser('email') email: string) {
-    return await this.authService.getMe(email);
+  async getMe(@Req() request: RequestWithUser) {
+    return await this.authService.getMe(request.user.sub);
   }
 
   @Post('login')

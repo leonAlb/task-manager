@@ -11,6 +11,7 @@ import { CreateTaskDto } from '../dto/create-task.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
 import { ConfigService } from '@nestjs/config';
 import { ReorderTasksDto } from '../dto/reorder-tasks.dto';
+import { Role } from '../../auth/entities/user.entity';
 
 @Injectable()
 export class TasksService {
@@ -63,22 +64,15 @@ export class TasksService {
   }
 
   // Update a task
-  async updateTask(
-    userId: number,
-    taskId: number,
-    body: UpdateTaskDto,
-    email: string,
-  ) {
+  async updateTask(userId: number, taskId: number, body: UpdateTaskDto) {
     const task = await this.tasksRepository.findOne({ where: { id: taskId } });
+    const user = await this.authService.findById(userId);
 
     if (!task) {
       throw new NotFoundException('Task not found');
     }
 
-    const isAdmin =
-      email === this.configService.getOrThrow<string>('ADMIN_EMAIL');
-
-    if (!isAdmin && task.userId !== userId) {
+    if (!(user.role === Role.ADMIN) && task.userId !== userId) {
       throw new ForbiddenException(
         'You do not have permission to update this task',
       );
@@ -89,7 +83,7 @@ export class TasksService {
     return this.tasksRepository.save(task);
   }
 
-  async reorderTasks(userId: number, body: ReorderTasksDto, email: string) {
+  async reorderTasks(userId: number, body: ReorderTasksDto) {
     const ids = body.items.map((item) => item.id);
     const tasks = await this.tasksRepository.findBy({ id: In(ids) });
 
@@ -97,10 +91,9 @@ export class TasksService {
       throw new NotFoundException('One or more tasks not found');
     }
 
-    const isAdmin =
-      email === this.configService.getOrThrow<string>('ADMIN_EMAIL');
+    const user = await this.authService.findById(userId);
 
-    if (!isAdmin) {
+    if (!(user.role === Role.ADMIN)) {
       const unauthorized = tasks.find((task) => task.userId !== userId);
       if (unauthorized) {
         throw new ForbiddenException(
@@ -124,17 +117,16 @@ export class TasksService {
   }
 
   // Delete a task
-  async deleteTask(userId: number, taskId: number, email: string) {
+  async deleteTask(userId: number, taskId: number) {
     const task = await this.tasksRepository.findOne({ where: { id: taskId } });
 
     if (!task) {
       throw new NotFoundException('Task not found');
     }
 
-    const isAdmin =
-      email === this.configService.getOrThrow<string>('ADMIN_EMAIL');
+    const user = await this.authService.findById(userId);
 
-    if (!isAdmin && task.userId !== userId) {
+    if (!(user.role === Role.ADMIN) && task.userId !== userId) {
       throw new ForbiddenException(
         'You do not have permission to delete this task',
       );

@@ -9,7 +9,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { User } from '../entities/user.entity';
+import { Role, User } from '../entities/user.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 
 @Injectable()
@@ -23,24 +23,20 @@ export class AuthService {
     private configService: ConfigService,
   ) {}
 
-  async getMe(email: string) {
-    const user = await this.usersRepository.findOne({ where: { email } });
+  async getMe(userId: number) {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    const safeUser = {
+    return {
       id: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      role: user.role,
       tasks: user.tasks,
     };
-
-    const isAdmin =
-      user.email === this.configService.getOrThrow<string>('ADMIN_EMAIL');
-
-    return { ...safeUser, isAdmin };
   }
 
   async login(email: string, password: string) {
@@ -49,7 +45,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid Login Credentials');
     }
 
-    const payload = { sub: user.id, email: user.email };
+    const payload = { sub: user.id, role: user.role };
 
     return this.generateTokens(payload);
   }
@@ -83,19 +79,21 @@ export class AuthService {
         firstName: newUser.firstName,
         lastName: newUser.lastName,
         email: newUser.email,
+        role: newUser.role,
         tasks: newUser.tasks,
+        teams: newUser.teams,
       };
     }
   }
 
   async refreshToken(refreshToken: string) {
     const secret = this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
-    let payload: { sub: number; email: string };
+    let payload: { sub: number; role: Role };
 
     try {
       payload = await this.jwtService.verifyAsync<{
         sub: number;
-        email: string;
+        role: Role;
       }>(refreshToken, { secret });
     } catch {
       throw new UnauthorizedException(
@@ -124,7 +122,7 @@ export class AuthService {
 
     return this.generateTokens({
       sub: payload.sub,
-      email: payload.email,
+      role: payload.role,
     });
   }
 
@@ -143,7 +141,7 @@ export class AuthService {
     return { message: 'Logged out successfully' };
   }
 
-  private async generateTokens(payload: { sub: number; email: string }) {
+  private async generateTokens(payload: { sub: number; role: Role }) {
     const refreshSecret =
       this.configService.getOrThrow<string>('JWT_REFRESH_SECRET');
 

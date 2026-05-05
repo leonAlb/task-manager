@@ -7,10 +7,11 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { extractTokenFromHeader } from '../utils/extract-token';
+import { Role } from '../entities/user.entity';
 
 export interface JwtPayload {
   sub: number;
-  email: string;
+  role: Role;
 }
 
 export interface RequestWithUser extends Request {

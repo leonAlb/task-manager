@@ -19,12 +19,6 @@ It's a Kanban-style task board where users manage their own tasks across three c
 - Manage users
 - Delete all tasks or wipe all data
 
-## Planned
-
-- Project Manager role — assign tasks to users, view team boards
-- Real-time updates via WebSockets
-- Email notifications for task assignments
-
 ## Requirements
 
 - [Node.js](https://nodejs.org/) (v18+)

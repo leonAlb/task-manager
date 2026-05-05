@@ -1,4 +1,11 @@
 import { Task } from './tasks.models';
+
+export enum Role {
+  USER = 'user',
+  PROJECT_MANAGER = 'project_manager',
+  ADMIN = 'admin',
+}
+
 export interface AuthCredentials {
   email: string;
   password: string;
@@ -29,5 +36,5 @@ export interface UserProfile {
   firstName: string;
   lastName: string;
   email: string;
-  isAdmin: boolean;
+  role: Role;
 }
