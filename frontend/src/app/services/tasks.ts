@@ -23,6 +23,10 @@ export class TasksService {
     return this.http.post<Task>(`${this.apiUrl}`, Task);
   }
 
+  delegateTask(task: CreateTask) {
+    return this.http.post<Task>(`${this.apiUrl}/delegate`, task);
+  }
+
   updateTask({ id, ...body }: UpdateTask) {
     return this.http.patch<Task>(`${this.apiUrl}/${id}`, body);
   }

@@ -8,10 +8,11 @@ import { In, Repository } from 'typeorm';
 import { Task, TaskStatus } from '../entities/task.entity';
 import { AuthService } from '../../auth/service/auth.service';
 import { CreateTaskDto } from '../dto/create-task.dto';
+import { DelegateTaskDto } from '../dto/delegate-task.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
-import { ConfigService } from '@nestjs/config';
 import { ReorderTasksDto } from '../dto/reorder-tasks.dto';
 import { Role } from '../../auth/entities/user.entity';
+import { TeamsService } from '../../teams/service/teams.service';
 
 @Injectable()
 export class TasksService {
@@ -19,7 +20,7 @@ export class TasksService {
     @InjectRepository(Task)
     private tasksRepository: Repository<Task>,
     private authService: AuthService,
-    private configService: ConfigService,
+    private teamsService: TeamsService,
   ) {}
 
   // Get all users with their tasks
@@ -29,7 +30,6 @@ export class TasksService {
 
   // Get all tasks for the authenticated user
   async getTasks(userId: number) {
-    // Just search by the exposed userId! No need to find the user first.
     return this.tasksRepository.find({
       where: { userId },
       order: { status: 'ASC', order: 'ASC', id: 'ASC' },
@@ -63,6 +63,22 @@ export class TasksService {
     return this.tasksRepository.save(task);
   }
 
+  async delegateTask(managerId: number, body: DelegateTaskDto) {
+    const canAssign = await this.teamsService.isManagerOfUser(
+      managerId,
+      body.userId,
+    );
+
+    if (!canAssign) {
+      throw new ForbiddenException(
+        'You do not have permission to assign tasks to this user',
+      );
+    }
+
+    const { userId, ...taskBody } = body;
+    return this.createTask(userId, taskBody);
+  }
+
   // Update a task
   async updateTask(userId: number, taskId: number, body: UpdateTaskDto) {
     const task = await this.tasksRepository.findOne({ where: { id: taskId } });
@@ -72,7 +88,11 @@ export class TasksService {
       throw new NotFoundException('Task not found');
     }
 
-    if (!(user.role === Role.ADMIN) && task.userId !== userId) {
+    const isAdmin = user.role === Role.ADMIN;
+    const isPM = user.role === Role.PROJECT_MANAGER;
+    const isOwner = task.userId === userId;
+
+    if (!isAdmin && !isPM && !isOwner) {
       throw new ForbiddenException(
         'You do not have permission to update this task',
       );
@@ -93,7 +113,11 @@ export class TasksService {
 
     const user = await this.authService.findById(userId);
 
-    if (!(user.role === Role.ADMIN)) {
+    // Check if user is a "Power User"
+    const isPowerUser =
+      user.role === Role.ADMIN || user.role === Role.PROJECT_MANAGER;
+
+    if (!isPowerUser) {
       const unauthorized = tasks.find((task) => task.userId !== userId);
       if (unauthorized) {
         throw new ForbiddenException(
@@ -126,7 +150,11 @@ export class TasksService {
 
     const user = await this.authService.findById(userId);
 
-    if (!(user.role === Role.ADMIN) && task.userId !== userId) {
+    const isAdmin = user.role === Role.ADMIN;
+    const isPM = user.role === Role.PROJECT_MANAGER;
+    const isOwner = task.userId === userId;
+
+    if (!isAdmin && !isPM && !isOwner) {
       throw new ForbiddenException(
         'You do not have permission to delete this task',
       );

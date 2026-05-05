@@ -170,6 +170,7 @@ export class AuthService {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      role: user.role,
       tasks: user.tasks,
     }));
   }

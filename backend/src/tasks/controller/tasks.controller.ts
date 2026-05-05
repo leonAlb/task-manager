@@ -17,6 +17,7 @@ import { Roles } from '../../auth/decorator/roles.decorator';
 import { Role } from '../../auth/entities/user.entity';
 import type { RequestWithUser } from '../../auth/guard/auth.guard';
 import { CreateTaskDto } from '../dto/create-task.dto';
+import { DelegateTaskDto } from '../dto/delegate-task.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
 import { ReorderTasksDto } from '../dto/reorder-tasks.dto';
 
@@ -43,6 +44,16 @@ export class TasksController {
     @Body() body: CreateTaskDto,
   ) {
     return await this.tasksService.createTask(request.user.sub, body);
+  }
+
+  @Post('delegate')
+  @UseGuards(RolesGuard)
+  @Roles(Role.PROJECT_MANAGER)
+  async delegateTask(
+    @Req() request: RequestWithUser,
+    @Body() body: DelegateTaskDto,
+  ) {
+    return await this.tasksService.delegateTask(request.user.sub, body);
   }
 
   @Patch('reorder')

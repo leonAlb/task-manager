@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { Team } from '../entities/team.entity';
-import { User } from '../../auth/entities/user.entity';
+import { Role, User } from '../../auth/entities/user.entity';
 
 @Injectable()
 export class TeamsService {
@@ -38,8 +38,51 @@ export class TeamsService {
       throw new NotFoundException('User not found');
     }
 
+    if (team.members.some((member) => member.id === userId)) {
+      return team;
+    }
+
     team.members.push(user);
     return this.teamsRepository.save(team);
+  }
+
+  async getAvailableMembers(teamId: number, managerId: number) {
+    const team = await this.teamsRepository.findOne({
+      where: { id: teamId, managerId },
+      relations: ['members'],
+    });
+
+    if (!team) {
+      throw new NotFoundException('Team not found');
+    }
+
+    const memberIds = team.members.map((member) => member.id);
+    const where = memberIds.length
+      ? { role: Role.USER, id: Not(In(memberIds)) }
+      : { role: Role.USER };
+
+    const users = await this.usersRepository.find({ where });
+
+    return users.map((user) => ({
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+    }));
+  }
+
+  async getManagedTeams(managerId: number) {
+    const teams = await this.teamsRepository.find({
+      where: { managerId },
+      relations: ['members'],
+    });
+
+    return teams.map((team) => ({
+      id: team.id,
+      name: team.name,
+      memberCount: team.members.length,
+    }));
   }
 
   async getTeamTasks(teamId: number, managerId: number) {
@@ -53,13 +96,23 @@ export class TeamsService {
     }
 
     return team.members.map((member) => ({
-      user: {
-        id: member.id,
-        firstName: member.firstName,
-        lastName: member.lastName,
-      },
+      id: member.id,
+      firstName: member.firstName,
+      lastName: member.lastName,
+      email: member.email,
+      role: member.role,
       tasks: member.tasks,
     }));
+  }
+
+  async isManagerOfUser(managerId: number, userId: number) {
+    const count = await this.teamsRepository
+      .createQueryBuilder('team')
+      .innerJoin('team.members', 'member', 'member.id = :userId', { userId })
+      .where('team.managerId = :managerId', { managerId })
+      .getCount();
+
+    return count > 0;
   }
 
   async getAllTeams(): Promise<Team[]> {

@@ -482,74 +482,183 @@ button {
   justify-content: center;
 }
 
+// ─── User Popup Container ─────────────────────────────────────────
 .user-popup {
   background: var(--bg-popup);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  padding: 28px;
-  min-width: 480px;
-  max-width: 560px;
+  padding: 24px;
+  // min-width is crucial to prevent columns from collapsing/stacking
+  min-width: 650px;
+  max-width: 750px;
   max-height: 70vh;
   overflow-y: auto;
   z-index: 1000;
 
+  // 1. Prevents layout jump when scrollbar appears
+  scrollbar-gutter: stable;
+  padding-right: 12px;
+
+  // 2. Custom scrollbar styling (Floating pill style)
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+
+  &::-webkit-scrollbar {
+    width: 12px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 8px 0;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 10px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    &:hover {
+      background-color: var(--text-secondary);
+    }
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
   li {
-    display: grid;
-    grid-template-columns: 150px 1fr 44px;
+    display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 0;
+    gap: 16px;
+    padding: 14px 8px;
     border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s ease;
 
     &:last-child {
       border-bottom: none;
     }
+
+    // ─── Column Lockdown ──────────────────────────────────────────
+
+    .user-fullname {
+      // Fixed width prevents long names from pushing buttons out of view
+      flex: 0 0 170px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-email {
+      // Fluid column: only the email shrinks/grows
+      flex: 1;
+      font-size: 13px;
+      opacity: 0.6;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-role-label {
+      // Fixed width for the role text (PM / User)
+      flex: 0 0 45px;
+      font-size: 11px;
+      text-align: right;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    // ─── Button Group ─────────────────────────────────────────────
+
+    .user-actions {
+      // Rigid container: prevents buttons from wrapping or stacking
+      flex: 0 0 160px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+
+      .btn-admin {
+        flex: 0 0 110px;
+        width: 110px;
+        padding: 7px 0;
+        font-size: 12px;
+        white-space: nowrap;
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        border-radius: 8px;
+        cursor: pointer;
+
+        &:hover {
+          background-color: var(--border-color);
+        }
+      }
+
+      .btn-danger {
+        flex: 0 0 36px;
+        height: 36px;
+        width: 36px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #dc2626;
+        border: none;
+        color: white;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+
+        &:hover {
+          background-color: #b91c1c;
+        }
+      }
+
+      .admin-badge {
+        flex: 0 0 110px;
+        background-color: #4f7ef8;
+        color: white;
+        font-size: 11px;
+        padding: 4px 0;
+        text-align: center;
+        border-radius: 999px;
+      }
+    }
   }
 }
 
-.user-popup .btn-danger {
-  width: 36px !important;
-  height: 36px;
-  min-width: unset;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #dc2626;
-  border-color: #dc2626;
-  color: white;
-  border-radius: 8px;
-
-  &:hover {
-    background-color: #b91c1c;
-    border-color: #b91c1c;
-    opacity: 1;
-  }
-}
-
+// ─── Popup Header ────────────────────────────────────────────────
 .popup-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--border-color);
 
   h3 {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
     color: var(--text-primary);
   }
 
   button {
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    border-radius: 50%;
-    font-size: 18px;
-    border: none;
+    width: 32px;
+    height: 32px;
     background: transparent;
+    border: none;
     color: var(--text-primary);
+    font-size: 24px;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     &:hover {
       background-color: var(--border-color);
@@ -561,6 +670,21 @@ button {
   font-size: 12px;
   opacity: 0.6;
   flex: 1;
+  min-width: 140px;
+}
+
+.user-fullname {
+  min-width: 140px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.user-role-label {
+  width: 70px;
+  text-align: right;
+  font-size: 12px;
+  opacity: 0.7;
+  color: var(--text-secondary);
 }
 
 .admin-badge {
@@ -635,6 +759,72 @@ button {
     &:hover {
       background-color: #3b6de0;
       opacity: 1;
+    }
+  }
+}
+
+.manage-teams-popup {
+  background: var(--bg-popup);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  min-width: 520px; // Slightly wider to fit the 3-button footer
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column; // Allows header/body/footer split
+  z-index: 1000;
+
+  .teams-list-container {
+    padding: 20px;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-color);
+
+      .team-name {
+        flex: 0 0 140px; // Locked
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .member-count {
+        flex: 1; // Fluid spacer
+        font-size: 13px;
+        opacity: 0.6;
+      }
+
+      .btn-select {
+        flex: 0 0 180px; // Locked width for the Select/Selected button
+        padding: 8px 0;
+      }
+    }
+  }
+
+  .popup-footer {
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.2fr; // Balanced columns for the 3 buttons
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.02); // Subtly different background
+    border-radius: 0 0 16px 16px;
+
+    button {
+      padding: 10px;
+      font-weight: 500;
+      white-space: nowrap;
     }
   }
 }

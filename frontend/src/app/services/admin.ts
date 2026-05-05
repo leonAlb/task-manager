@@ -22,4 +22,8 @@ export class AdminService {
   deleteUser(id: number) {
     return this.http.delete(`${this.apiUrl}/delete-user/${id}`);
   }
+
+  toggleUserRole(id: number) {
+    return this.http.patch(`${this.apiUrl}/users/${id}/role`, {});
+  }
 }

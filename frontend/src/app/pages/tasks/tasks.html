@@ -12,7 +12,11 @@
               >{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</span
             >
             <span class="user-role">{{
-              currentUser()?.role === Role.ADMIN ? 'Admin' : 'User'
+              currentUser()?.role === Role.ADMIN
+                ? 'Admin'
+                : currentUser()?.role === Role.PROJECT_MANAGER
+                  ? 'Project Manager'
+                  : 'User'
             }}</span>
           </div>
         }
@@ -35,6 +39,14 @@
             <button class="btn-admin" (click)="deleteAllTasks()">Delete All Tasks</button>
             <button class="btn-danger" (click)="deleteAllData()">Delete All Data</button>
             <button class="btn-admin" (click)="toggleUserPopup()">Manage Users</button>
+          </div>
+        }
+
+        @if (currentUser()?.role === Role.PROJECT_MANAGER) {
+          <div class="admin-section">
+            <span class="section-label">Project Manager</span>
+            <button class="btn-admin" (click)="openCreateTeamPopup()">Create Team</button>
+            <button class="btn-admin" (click)="openManageTeamsPopup()">Manage Teams</button>
           </div>
         }
 
@@ -66,21 +78,189 @@
           <button (click)="toggleUserPopup()">&times;</button>
         </div>
         <ul>
+          @for (user of sortedUsers(); track user.id) {
+            <li>
+              <span class="user-fullname">{{ user.firstName }} {{ user.lastName }}</span>
+              <span class="user-email">{{ user.email }}</span>
+              <span class="user-role-label">
+                {{
+                  user.role === Role.ADMIN
+                    ? 'Admin'
+                    : user.role === Role.PROJECT_MANAGER
+                      ? 'PM'
+                      : 'User'
+                }}
+              </span>
+
+              <!-- Lock the buttons into this container -->
+              <div class="user-actions">
+                @if (user.email !== currentUser()?.email) {
+                  @if (user.role !== Role.ADMIN) {
+                    <button class="btn-admin" (click)="toggleUserRole(user)">
+                      {{ user.role === Role.PROJECT_MANAGER ? 'Make User' : 'Make PM' }}
+                    </button>
+                  }
+                  <button class="btn-danger" (click)="deleteUser(user.id)">🗑️</button>
+                } @else {
+                  <span class="admin-badge">Admin</span>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+    </div>
+  }
+
+  <!-- CREATE TEAM POPUP -->
+  @if (showCreateTeamPopup()) {
+    <div class="popup-overlay" (click)="closeIfOverlay($event, 'create-team')">
+      <div class="user-popup" (mousedown)="$event.stopPropagation()">
+        <div class="popup-header">
+          <h3>Create Team</h3>
+          <button (click)="closeCreateTeamPopup()">&times;</button>
+        </div>
+        <div class="create-task-form">
+          <input
+            placeholder="Team name"
+            [value]="newTeamName()"
+            (input)="newTeamName.set($any($event.target).value)"
+          />
+          <div class="popup-actions">
+            <button (click)="closeCreateTeamPopup()">Cancel</button>
+            <button class="btn-create" [disabled]="!isTeamFormValid()" (click)="createTeam()">
+              Create Team
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- TEAM POPUP -->
+  @if (showTeamPopup()) {
+    <div class="popup-overlay" (click)="closeIfOverlay($event, 'team')">
+      <!-- Using a specific class for team popup to handle the wider footer -->
+      <div class="user-popup manage-teams-popup" (mousedown)="$event.stopPropagation()">
+        <div class="popup-header">
+          <h3>Manage Teams</h3>
+          <button (click)="closeManageTeamsPopup()">&times;</button>
+        </div>
+
+        <div class="teams-list-container">
+          <ul>
+            @for (team of teams(); track team.id) {
+              <li>
+                <span class="user-fullname">{{ team.name }}</span>
+                <span class="user-email">{{ team.memberCount }} members</span>
+
+                <div class="user-actions">
+                  <button
+                    class="btn-admin"
+                    [class.selected]="selectedTeamId() === team.id"
+                    (click)="selectTeam(team.id)"
+                  >
+                    {{ selectedTeamId() === team.id ? 'Selected' : 'Select' }}
+                  </button>
+                </div>
+              </li>
+            }
+            @if (teams().length === 0) {
+              <li class="empty-state">No teams found.</li>
+            }
+          </ul>
+        </div>
+
+        <!-- Action Footer -->
+        <div class="popup-footer">
+          <button class="btn-secondary" (click)="closeManageTeamsPopup()">Close</button>
+          <button class="btn-secondary" [disabled]="!selectedTeamId()" (click)="openMembersPopup()">
+            Add Members
+          </button>
+          <button class="btn-primary" [disabled]="!selectedTeamId()" (click)="openDelegatePopup()">
+            Delegate Task
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ADD MEMBERS POPUP -->
+  @if (showMembersPopup()) {
+    <div class="popup-overlay" (click)="closeIfOverlay($event, 'members')">
+      <div class="user-popup" (mousedown)="$event.stopPropagation()">
+        <div class="popup-header">
+          <h3>Add Team Members</h3>
+          <button (click)="closeMembersPopup()">&times;</button>
+        </div>
+        <ul>
+          @for (user of availableUsers(); track user.id) {
+            <li>
+              <span class="user-fullname">{{ user.firstName }} {{ user.lastName }}</span>
+              <span class="user-email">{{ user.email }}</span>
+              <button class="btn-admin" (click)="addMember(user.id)">Add</button>
+            </li>
+          }
+          @if (availableUsers().length === 0) {
+            <li>No users available.</li>
+          }
+        </ul>
+      </div>
+    </div>
+  }
+
+  <!-- DELEGATE TASK POPUP -->
+  @if (showDelegatePopup()) {
+    <div class="popup-overlay" (click)="closeIfOverlay($event, 'delegate')">
+      <div class="user-popup" (mousedown)="$event.stopPropagation()">
+        <div class="popup-header">
+          <h3>Delegate Task</h3>
+          <button (click)="closeDelegatePopup()">&times;</button>
+        </div>
+        <ul>
           @for (user of users(); track user.id) {
             <li>
               <span>{{ user.firstName }} {{ user.lastName }}</span>
-              <span class="user-email">{{ user.email }}</span>
-              @if (user.email !== currentUser()?.email) {
-                <button class="btn-danger" (click)="deleteUser(user.id)">🗑️</button>
-              } @else {
-                <span class="admin-badge">Admin</span>
-              }
+              <button class="btn-admin" (click)="delegateUserId.set(user.id)">
+                {{ delegateUserId() === user.id ? 'Selected' : 'Select' }}
+              </button>
             </li>
           }
           @if (users().length === 0) {
-            <li>No users found.</li>
+            <li>No team members found.</li>
           }
         </ul>
+        <div class="create-task-form">
+          <input
+            placeholder="Title"
+            [value]="delegateTitle()"
+            (input)="delegateTitle.set($any($event.target).value)"
+          />
+          <input
+            placeholder="Description"
+            [value]="delegateDescription()"
+            (input)="delegateDescription.set($any($event.target).value)"
+          />
+          <input
+            type="datetime-local"
+            [value]="delegateDueDate()"
+            (change)="delegateDueDate.set($any($event.target).value)"
+          />
+          <select
+            [value]="delegatePriority()"
+            (change)="delegatePriority.set($any($event.target).value)"
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+          <div class="popup-actions">
+            <button (click)="closeDelegatePopup()">Cancel</button>
+            <button class="btn-create" [disabled]="!isDelegateFormValid()" (click)="delegateTask()">
+              Create Task
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   }
@@ -135,20 +315,20 @@
   <!-- KANBAN COLUMNS -->
   <section class="board">
     @for (column of columns; track column.id) {
-      <div
-        class="column {{ column.class }}"
-        cdkDropList
-        [id]="column.id"
-        [cdkDropListData]="column.tasks()"
-        [cdkDropListConnectedTo]="getConnectedLists(column.id)"
-        (cdkDropListDropped)="onDrop($event)"
-      >
+      <div class="column {{ column.class }}">
         <h2 class="column-header">
           {{ column.title }}
           <span class="task-count">{{ column.tasks().length }}</span>
         </h2>
 
-        <div class="task-list">
+        <div
+          class="task-list"
+          cdkDropList
+          [id]="column.id"
+          [cdkDropListData]="column.tasks()"
+          [cdkDropListConnectedTo]="getConnectedLists(column.id)"
+          (cdkDropListDropped)="onDrop($event)"
+        >
           @for (task of column.tasks(); track task.id) {
             <div
               class="task-card"

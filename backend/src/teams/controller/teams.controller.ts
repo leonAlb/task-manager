@@ -23,6 +23,11 @@ import { AddMemberDto } from '../dto/add-member.dto';
 export class TeamsController {
   constructor(private teamsService: TeamsService) {}
 
+  @Get()
+  async getManagedTeams(@Req() request: RequestWithUser) {
+    return this.teamsService.getManagedTeams(request.user.sub);
+  }
+
   @Post()
   async createTeam(
     @Req() request: RequestWithUser,
@@ -38,6 +43,14 @@ export class TeamsController {
     @Body() body: AddMemberDto,
   ) {
     return this.teamsService.addMember(teamId, request.user.sub, body.userId);
+  }
+
+  @Get(':id/available-users')
+  async getAvailableMembers(
+    @Req() request: RequestWithUser,
+    @Param('id', ParseIntPipe) teamId: number,
+  ) {
+    return this.teamsService.getAvailableMembers(teamId, request.user.sub);
   }
 
   @Get(':id/tasks')

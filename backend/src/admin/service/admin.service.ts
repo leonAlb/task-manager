@@ -71,129 +71,59 @@ export class AdminService implements OnApplicationBootstrap {
     const days = (n: number) => new Date(Date.now() + n * 86400000);
     const defaultPassword = await bcrypt.hash('qwertz', 10);
 
-    const user1 = await this.findOrCreateUser(
-      'John',
-      'Doe',
-      'john.doe@example.com',
-      defaultPassword,
-    );
-    const user2 = await this.findOrCreateUser(
-      'Jane',
-      'Smith',
-      'jane.smith@example.com',
-      defaultPassword,
-    );
-    const user3 = await this.findOrCreateUser(
-      'Alice',
-      'Jones',
-      'alice.jones@example.com',
-      defaultPassword,
-    );
+    const users: User[] = [];
 
-    const user1Tasks = await this.tasksRepository.count({
-      where: { userId: user1.id },
-    });
-    const user2Tasks = await this.tasksRepository.count({
-      where: { userId: user2.id },
-    });
-    const user3Tasks = await this.tasksRepository.count({
-      where: { userId: user3.id },
-    });
-
-    if (user1Tasks === 0) {
-      await this.tasksRepository.save(
-        this.tasksRepository.create([
-          {
-            title: 'Example Task 1',
-            description: 'This is an example task',
-            dueDate: days(7),
-            priority: TaskPriority.LOW,
-            status: TaskStatus.TODO,
-            userId: user1.id,
-          },
-          {
-            title: 'Example Task 2',
-            description: 'This task is in progress',
-            dueDate: days(3),
-            priority: TaskPriority.MEDIUM,
-            status: TaskStatus.IN_PROGRESS,
-            userId: user1.id,
-          },
-          {
-            title: 'Example Task 3',
-            description: 'This task is done',
-            dueDate: days(-2),
-            priority: TaskPriority.HIGH,
-            status: TaskStatus.COMPLETED,
-            userId: user1.id,
-          },
-        ]),
+    // 1. Generate 10 example users dynamically
+    for (let i = 1; i <= 10; i++) {
+      const user = await this.findOrCreateUser(
+        `TestUser${i}`,
+        `Example`,
+        `user${i}@example.com`,
+        defaultPassword,
       );
+      users.push(user);
     }
 
-    if (user2Tasks === 0) {
-      await this.tasksRepository.save(
-        this.tasksRepository.create([
-          {
-            title: 'Learn Angular',
-            description: 'Study Angular signals and components',
-            dueDate: days(5),
-            priority: TaskPriority.HIGH,
-            status: TaskStatus.TODO,
-            userId: user2.id,
-          },
-          {
-            title: 'Master NestJS',
-            description: 'Build a REST API with NestJS',
-            dueDate: days(14),
-            priority: TaskPriority.MEDIUM,
-            status: TaskStatus.TODO,
-            userId: user2.id,
-          },
-          {
-            title: 'Build fullstack app',
-            description: 'Combine Angular and NestJS into one project',
-            dueDate: days(30),
-            priority: TaskPriority.LOW,
-            status: TaskStatus.TODO,
-            userId: user2.id,
-          },
-        ]),
-      );
+    // 2. Loop through the generated users to seed their tasks
+    for (const [index, user] of users.entries()) {
+      const userTasksCount = await this.tasksRepository.count({
+        where: { userId: user.id },
+      });
+
+      if (userTasksCount === 0) {
+        // Create some generic tasks for each user, adding a bit of randomness to the due dates
+        await this.tasksRepository.save(
+          this.tasksRepository.create([
+            {
+              title: `Learn Module ${index + 1}`,
+              description: `Study requirements for user ${user.firstName}`,
+              dueDate: days(Math.floor(Math.random() * 14) + 1), // Random due date 1-14 days in the future
+              priority: TaskPriority.HIGH,
+              status: TaskStatus.TODO,
+              userId: user.id,
+            },
+            {
+              title: `Complete Setup ${index + 1}`,
+              description: `Finish initial configuration for ${user.email}`,
+              dueDate: days(3),
+              priority: TaskPriority.MEDIUM,
+              status: TaskStatus.IN_PROGRESS,
+              userId: user.id,
+            },
+            {
+              title: `Review Docs ${index + 1}`,
+              description: 'Read the project documentation',
+              dueDate: days(-2), // Past due
+              priority: TaskPriority.LOW,
+              status: TaskStatus.COMPLETED,
+              userId: user.id,
+            },
+          ]),
+        );
+      }
     }
 
-    if (user3Tasks === 0) {
-      await this.tasksRepository.save(
-        this.tasksRepository.create([
-          {
-            title: 'Write tests',
-            description: 'Add unit and integration tests',
-            dueDate: days(2),
-            priority: TaskPriority.HIGH,
-            status: TaskStatus.TODO,
-            userId: user3.id,
-          },
-          {
-            title: 'Refactor code',
-            description: 'Clean up service layer',
-            dueDate: days(10),
-            priority: TaskPriority.MEDIUM,
-            status: TaskStatus.IN_PROGRESS,
-            userId: user3.id,
-          },
-          {
-            title: 'Update README',
-            description: 'Document setup and usage',
-            dueDate: days(6),
-            priority: TaskPriority.LOW,
-            status: TaskStatus.IN_PROGRESS,
-            userId: user3.id,
-          },
-        ]),
-      );
-    }
-
-    return { message: 'Seeded successfully' };
+    return { message: '10 users seeded successfully' };
   }
 
   async deleteAllData() {

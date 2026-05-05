@@ -21,6 +21,8 @@ import {
 } from '@angular/cdk/drag-drop';
 import { AdminService } from '../../services/admin';
 import { ThemeService } from '../../services/theme';
+import { TeamsService } from '../../services/teams';
+import { TeamSummary } from '../../models/teams.models';
 
 @Component({
   selector: 'app-tasks',
@@ -52,6 +54,8 @@ export class Tasks implements OnInit {
     const role = this.currentUser()?.role;
     return role === Role.ADMIN || role === Role.PROJECT_MANAGER;
   });
+  isAdmin = computed(() => this.currentUser()?.role === Role.ADMIN);
+  isProjectManager = computed(() => this.currentUser()?.role === Role.PROJECT_MANAGER);
 
   // UI related
   showUserPopup = signal(false);
@@ -59,6 +63,10 @@ export class Tasks implements OnInit {
   taskPopupMode = signal<'create' | 'edit'>('create');
   editingTask = signal<Task | null>(null);
   sidebarCollapsed = signal(false);
+  showTeamPopup = signal(false);
+  showCreateTeamPopup = signal(false);
+  showDelegatePopup = signal(false);
+  showMembersPopup = signal(false);
 
   columns = [
     {
@@ -89,6 +97,10 @@ export class Tasks implements OnInit {
     return [...tasks].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id - b.id);
   }
 
+  readonly sortedUsers = computed(() => {
+    return [...this.users()].sort((a, b) => a.firstName.localeCompare(b.firstName));
+  });
+
   // Task form
   newTaskTitle = signal('');
   newTaskDescription = signal('');
@@ -100,12 +112,35 @@ export class Tasks implements OnInit {
       !!this.newTaskTitle().trim() && !!this.newTaskDescription().trim() && !!this.newTaskDueDate(),
   );
 
+  // PM team management
+  teams = signal<TeamSummary[]>([]);
+  selectedTeamId = signal<number | null>(null);
+  newTeamName = signal('');
+  isTeamFormValid = computed(() => !!this.newTeamName().trim());
+  availableUsers = signal<User[]>([]);
+
+  // PM delegation form
+  delegateUserId = signal<number | null>(null);
+  delegateTitle = signal('');
+  delegateDescription = signal('');
+  delegateDueDate = signal('');
+  delegatePriority = signal<TaskPriority>(TaskPriority.MEDIUM);
+  isDelegateFormValid = computed(() => {
+    return (
+      !!this.delegateUserId() &&
+      !!this.delegateTitle().trim() &&
+      !!this.delegateDescription().trim() &&
+      !!this.delegateDueDate()
+    );
+  });
+
   // --------------------------------------------------------------
   // Injections
   // --------------------------------------------------------------
   private tasksService = inject(TasksService);
   private authService = inject(AuthService);
   private adminService = inject(AdminService);
+  private teamsService = inject(TeamsService);
   themeService = inject(ThemeService);
   private router = inject(Router);
   TaskStatus = TaskStatus;
@@ -142,17 +177,74 @@ export class Tasks implements OnInit {
     this.newTaskPriority.set(TaskPriority.MEDIUM);
   }
 
+  openCreateTeamPopup() {
+    this.newTeamName.set('');
+    this.showCreateTeamPopup.set(true);
+  }
+
+  closeCreateTeamPopup() {
+    this.showCreateTeamPopup.set(false);
+    this.newTeamName.set('');
+  }
+
+  openManageTeamsPopup() {
+    this.showTeamPopup.set(true);
+    this.loadManagedTeams();
+  }
+
+  closeManageTeamsPopup() {
+    this.showTeamPopup.set(false);
+  }
+
+  openDelegatePopup() {
+    if (!this.selectedTeamId()) return;
+    this.delegateUserId.set(null);
+    this.delegateTitle.set('');
+    this.delegateDescription.set('');
+    this.delegateDueDate.set('');
+    this.delegatePriority.set(TaskPriority.MEDIUM);
+    this.showTeamPopup.set(false);
+    this.showDelegatePopup.set(true);
+  }
+
+  openMembersPopup() {
+    const teamId = this.selectedTeamId();
+    if (!teamId) return;
+    this.showTeamPopup.set(false);
+    this.showMembersPopup.set(true);
+    this.loadAvailableMembers(teamId);
+  }
+
+  closeMembersPopup() {
+    this.showMembersPopup.set(false);
+  }
+
+  closeDelegatePopup() {
+    this.showDelegatePopup.set(false);
+  }
+
   private toDateTimeLocal(date: Date | string): string {
     return new Date(date).toISOString().slice(0, 16);
   }
 
-  closeIfOverlay(event: MouseEvent, type: 'user' | 'task') {
+  closeIfOverlay(
+    event: MouseEvent,
+    type: 'user' | 'task' | 'team' | 'delegate' | 'create-team' | 'members',
+  ) {
     if (event.target !== event.currentTarget) return;
 
     if (type === 'user') {
       this.showUserPopup.set(false);
-    } else {
+    } else if (type === 'task') {
       this.closeTaskPopup();
+    } else if (type === 'team') {
+      this.closeManageTeamsPopup();
+    } else if (type === 'delegate') {
+      this.closeDelegatePopup();
+    } else if (type === 'members') {
+      this.closeMembersPopup();
+    } else {
+      this.closeCreateTeamPopup();
     }
   }
 
@@ -225,6 +317,56 @@ export class Tasks implements OnInit {
     });
   }
 
+  createTeam() {
+    const name = this.newTeamName().trim();
+    if (!name) return;
+
+    this.teamsService.createTeam(name).subscribe(() => {
+      this.closeCreateTeamPopup();
+      this.loadManagedTeams();
+    });
+  }
+
+  selectTeam(teamId: number) {
+    if (this.selectedTeamId() === teamId) return;
+    this.selectedTeamId.set(teamId);
+    this.loadTeamTasks(teamId);
+  }
+
+  delegateTask() {
+    if (!this.isDelegateFormValid()) return;
+    const userId = this.delegateUserId();
+    if (!userId) return;
+
+    const payload: CreateTask = {
+      title: this.delegateTitle(),
+      description: this.delegateDescription(),
+      dueDate: new Date(this.delegateDueDate()),
+      priority: this.delegatePriority(),
+      status: TaskStatus.TODO,
+      userId,
+    };
+
+    this.tasksService.delegateTask(payload).subscribe(() => {
+      const teamId = this.selectedTeamId();
+      if (teamId) {
+        this.loadTeamTasks(teamId);
+      }
+      this.closeDelegatePopup();
+    });
+  }
+
+  addMember(userId: number) {
+    const teamId = this.selectedTeamId();
+    if (!teamId) return;
+
+    this.teamsService.addMember(teamId, userId).subscribe(() => {
+      this.loadTeamTasks(teamId);
+      this.loadAvailableMembers(teamId);
+      this.loadManagedTeams();
+    });
+  }
+
   // --------------------------------------------------------------
   // AdminStuff
   // --------------------------------------------------------------
@@ -241,6 +383,14 @@ export class Tasks implements OnInit {
     }
   }
 
+  toggleUserRole(user: User) {
+    if (user.role === Role.ADMIN || user.email === this.currentUser()?.email) return;
+
+    this.adminService.toggleUserRole(user.id).subscribe(() => {
+      this.tasksService.getUsers().subscribe((users) => this.users.set(users));
+    });
+  }
+
   private reloadTasks() {
     const role = this.currentUser()?.role;
 
@@ -252,8 +402,45 @@ export class Tasks implements OnInit {
       return;
     }
 
+    if (role === Role.PROJECT_MANAGER) {
+      this.loadManagedTeams();
+      return;
+    }
+
     this.users.set([]);
     this.tasksService.getTasks().subscribe((tasks) => this.tasks.set(tasks));
+  }
+
+  private loadManagedTeams() {
+    this.teamsService.getManagedTeams().subscribe((teams) => {
+      this.teams.set(teams);
+
+      if (!teams.length) {
+        this.selectedTeamId.set(null);
+        this.users.set([]);
+        this.tasks.set([]);
+        return;
+      }
+
+      const current = this.selectedTeamId();
+      const next = current && teams.some((team) => team.id === current) ? current : teams[0].id;
+
+      this.selectedTeamId.set(next);
+      this.loadTeamTasks(next);
+    });
+  }
+
+  private loadTeamTasks(teamId: number) {
+    this.teamsService.getTeamTasks(teamId).subscribe((members) => {
+      this.users.set(members);
+      this.tasks.set(members.flatMap((member) => member.tasks));
+    });
+  }
+
+  private loadAvailableMembers(teamId: number) {
+    this.teamsService.getAvailableMembers(teamId).subscribe((members) => {
+      this.availableUsers.set(members);
+    });
   }
 
   seedData() {
