@@ -48,9 +48,8 @@ export class TasksService {
     return maxOrder + 1;
   }
 
-  // Create a new task for the authenticated user
-  async createTask(userid: number, body: CreateTaskDto) {
-    const order = await this.getNextOrder(userid, TaskStatus.TODO);
+  async createTask(userId: number, body: CreateTaskDto) {
+    const order = await this.getNextOrder(userId, TaskStatus.TODO);
     const task = this.tasksRepository.create({
       title: body.title,
       description: body.description,
@@ -58,9 +57,17 @@ export class TasksService {
       priority: body.priority,
       status: TaskStatus.TODO,
       order,
-      userId: userid,
+      userId,
     });
     return this.tasksRepository.save(task);
+  }
+
+  private async assertTaskAccess(userId: number, task: Task) {
+    const user = await this.authService.findById(userId);
+    if (user.role === Role.ADMIN || user.role === Role.PROJECT_MANAGER) return;
+    if (task.userId !== userId) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
   }
 
   async delegateTask(managerId: number, body: DelegateTaskDto) {
@@ -82,24 +89,10 @@ export class TasksService {
   // Update a task
   async updateTask(userId: number, taskId: number, body: UpdateTaskDto) {
     const task = await this.tasksRepository.findOne({ where: { id: taskId } });
-    const user = await this.authService.findById(userId);
+    if (!task) throw new NotFoundException('Task not found');
 
-    if (!task) {
-      throw new NotFoundException('Task not found');
-    }
-
-    const isAdmin = user.role === Role.ADMIN;
-    const isPM = user.role === Role.PROJECT_MANAGER;
-    const isOwner = task.userId === userId;
-
-    if (!isAdmin && !isPM && !isOwner) {
-      throw new ForbiddenException(
-        'You do not have permission to update this task',
-      );
-    }
-
+    await this.assertTaskAccess(userId, task);
     Object.assign(task, body);
-
     return this.tasksRepository.save(task);
   }
 
@@ -143,23 +136,9 @@ export class TasksService {
   // Delete a task
   async deleteTask(userId: number, taskId: number) {
     const task = await this.tasksRepository.findOne({ where: { id: taskId } });
+    if (!task) throw new NotFoundException('Task not found');
 
-    if (!task) {
-      throw new NotFoundException('Task not found');
-    }
-
-    const user = await this.authService.findById(userId);
-
-    const isAdmin = user.role === Role.ADMIN;
-    const isPM = user.role === Role.PROJECT_MANAGER;
-    const isOwner = task.userId === userId;
-
-    if (!isAdmin && !isPM && !isOwner) {
-      throw new ForbiddenException(
-        'You do not have permission to delete this task',
-      );
-    }
-
+    await this.assertTaskAccess(userId, task);
     return this.tasksRepository.remove(task);
   }
 }

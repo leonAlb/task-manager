@@ -35,7 +35,6 @@ export class AuthService {
       lastName: user.lastName,
       email: user.email,
       role: user.role,
-      tasks: user.tasks,
     };
   }
 
@@ -55,34 +54,28 @@ export class AuthService {
     lastName: string,
     email: string,
     password: string,
-  ): Promise<Omit<User, 'password' | 'refreshTokens' | 'teams'>> {
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
+  ) {
     const existingUser = await this.usersRepository.findOne({
       where: { email },
     });
+    if (existingUser) throw new ConflictException('Email already in use');
 
-    if (existingUser) {
-      throw new ConflictException('Email already in use');
-    } else {
-      const newUser = this.usersRepository.create({
-        firstName,
-        lastName,
-        email,
-        password: hashedPassword,
-      });
-      await this.usersRepository.save(newUser);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = this.usersRepository.create({
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+    });
+    await this.usersRepository.save(newUser);
 
-      return {
-        id: newUser.id,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
-        email: newUser.email,
-        role: newUser.role,
-        tasks: newUser.tasks,
-      };
-    }
+    return {
+      id: newUser.id,
+      firstName: newUser.firstName,
+      lastName: newUser.lastName,
+      email: newUser.email,
+      role: newUser.role,
+    };
   }
 
   async refreshToken(refreshToken: string) {

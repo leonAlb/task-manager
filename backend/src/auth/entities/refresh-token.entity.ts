@@ -12,10 +12,10 @@ export class RefreshToken {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: false })
+  @Column()
   token: string;
 
-  @Column({ nullable: false })
+  @Column()
   expiresAt: Date;
 
   @Column({ default: false })

@@ -1,13 +1,6 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  OneToMany,
-  ManyToMany,
-} from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { RefreshToken } from './refresh-token.entity';
 import { Task } from '../../tasks/entities/task.entity';
-import { Team } from '../../teams/entities/team.entity';
 
 export enum Role {
   USER = 'user',
@@ -20,23 +13,19 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: false })
+  @Column()
   firstName: string;
 
-  @Column({ nullable: false })
+  @Column()
   lastName: string;
 
-  @Column({ unique: true, nullable: false })
+  @Column({ unique: true })
   email: string;
 
-  @Column({ nullable: false })
+  @Column()
   password: string;
 
-  @Column({
-    type: 'enum',
-    enum: Role,
-    default: Role.USER,
-  })
+  @Column({ type: 'enum', enum: Role, default: Role.USER })
   role: Role;
 
   @OneToMany(() => Task, (task) => task.user)
@@ -44,7 +33,4 @@ export class User {
 
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
   refreshTokens: RefreshToken[];
-
-  @ManyToMany(() => Team, (team) => team.members)
-  teams: Team[];
 }

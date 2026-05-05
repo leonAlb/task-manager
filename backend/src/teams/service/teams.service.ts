@@ -149,18 +149,15 @@ export class TeamsService {
       throw new NotFoundException('Team not found');
     }
 
-    const manager: User = team.manager;
-    const members: User[] = team.members;
-
     return {
       id: team.id,
       name: team.name,
       manager: {
-        id: manager.id,
-        firstName: manager.firstName,
-        lastName: manager.lastName,
+        id: team.manager.id,
+        firstName: team.manager.firstName,
+        lastName: team.manager.lastName,
       },
-      members: members.map((member: User) => ({
+      members: team.members.map((member) => ({
         user: {
           id: member.id,
           firstName: member.firstName,

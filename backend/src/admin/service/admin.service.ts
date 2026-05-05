@@ -9,8 +9,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { User, Role } from '../../auth/entities/user.entity';
-import { Task } from '../../tasks/entities/task.entity';
-import { TaskPriority, TaskStatus } from '../../tasks/entities/task.entity';
+import {
+  Task,
+  TaskPriority,
+  TaskStatus,
+} from '../../tasks/entities/task.entity';
 import { Team } from '../../teams/entities/team.entity';
 import { TeamsService } from '../../teams/service/teams.service';
 
