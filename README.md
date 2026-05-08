@@ -1,6 +1,6 @@
 # Task Manager
 
-A full-stack learning project to teach myself **NestJS**, **Angular**, and **PostgreSQL**.
+A full-stack learning project to teach myself **NestJS**, **Angular**, **PostgreSQL**, and **Docker**.
 
 It's a Kanban-style task board where users manage their own tasks across three columns: To Do, In Progress, and Completed.
 
@@ -27,64 +27,52 @@ It's a Kanban-style task board where users manage their own tasks across three c
 - Development Tools: Seed example users and tasks to quickly populate the board for testing.
 - System Hard Reset: Capability to delete all tasks or wipe the entire database.
 
-## Requirements
+## Stack
 
-- [Node.js](https://nodejs.org/) (v18+)
-- [PostgreSQL](https://www.postgresql.org/) running locally with a database named `taskmanager`
+| Layer     | Tech                    |
+|-----------|-------------------------|
+| Frontend  | Angular 21 + nginx      |
+| Backend   | NestJS                  |
+| Database  | PostgreSQL 18 + TypeORM |
+| Auth      | JWT (access + refresh)  |
+| Container | Docker + Docker Compose |
 
 ## Setup
 
-### 1. Clone and install
+### 1. Clone the repo
 
 ```bash
-# Backend
-cd backend
-npm install
-
-# Frontend
-cd ../frontend
-npm install
+git clone https://github.com/leonAlb/task-manager.git
+cd task-manager
 ```
 
-### 2. Configure the backend
+### 2. Set up environment files
 
-Create the `.env` file inside the `backend` folder by copying the example:
+Copy the example env files and fill in your values:
 
 ```bash
+cp .env.example .env
 cp backend/.env.example backend/.env
 ```
 
-Then open `backend/.env` and fill in your values — at minimum set `DATABASE_PASSWORD` to match your local PostgreSQL password and choose your own `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
+Open both files and set your own values for passwords, JWT secrets, and admin credentials.
 
-> **Note:** The admin account is created automatically on first startup using these credentials. Keep them in mind — you'll need them to log in as admin once the app is running.
+> **Note:** The admin account is created automatically on first startup using the credentials in `backend/.env`.
 
-### 3. Create the database
-
-In psql or pgAdmin, create a database named `taskmanager`:
-
-```sql
-CREATE DATABASE taskmanager;
-```
-
-### 4. Run it
+### 3. Run it
 
 ```bash
-# Backend (port 3000)
-cd backend
-npm run start:dev
-
-# Frontend (port 4200)
-cd frontend
-npm start
+docker compose up --build
 ```
 
 Open [http://localhost:4200](http://localhost:4200) in your browser.
 
-## Stack
+## Useful commands
 
-| Layer    | Tech                   |
-| -------- | ---------------------- |
-| Frontend | Angular 19             |
-| Backend  | NestJS                 |
-| Database | PostgreSQL + TypeORM   |
-| Auth     | JWT (access + refresh) |
+```bash
+docker compose up --build    # rebuild images and start
+docker compose up            # start without rebuilding
+docker compose down          # stop and remove containers (data preserved)
+docker compose down -v       # stop and wipe all data
+docker compose logs -f       # tail logs for all services
+```

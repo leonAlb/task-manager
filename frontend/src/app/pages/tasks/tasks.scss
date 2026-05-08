@@ -1,5 +1,3 @@
-@import '@angular/cdk/overlay-prebuilt.css';
-
 :host {
   --sidebar-w: 280px;
   --sidebar-collapsed-w: 60px;
@@ -893,7 +891,6 @@ button {
           justify-content: center;
           transition: all 0.2s ease;
         }
-
 
         .btn-admin {
           background-color: var(--bg-primary);

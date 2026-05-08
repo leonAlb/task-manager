@@ -1,0 +1,25 @@
+# Dependency directory
+node_modules/
+
+# Local build outputs
+dist/
+.angular/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor/OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
